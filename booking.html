@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RE-SAIKEL – Book a Pickup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-page="book">
+
+  <nav>
+    <a class="nav-brand" href="index.html"><span class="ico">♻</span> RE-SAIKEL</a>
+    <div class="nav-center">
+      <a href="index.html"        id="nl-home">Home</a>
+      <a href="services.html"     id="nl-services">Recycling Services</a>
+      <a href="how-it-works.html" id="nl-how">How It Works</a>
+      <a href="about.html"        id="nl-about">About us</a>
+    </div>
+    <div class="nav-right">
+      <a href="#" class="login">Log In</a>
+      <a href="#" class="signin">Sign In</a>
+    </div>
+  </nav>
+
+  <main class="page-shell">
+
+    <div class="page-hero">
+      <div class="page-hero-inner">
+        <h1>Book Your Pickup Partner</h1>
+        <p>Schedule a convenient waste collection with a vetted local service partner.</p>
+      </div>
+    </div>
+
+    <div style="background:var(--grey-bg);">
+      <div class="booking-layout">
+
+        <div class="booking-main">
+
+          <div class="b-step sr">
+            <div class="b-step-hd">
+              <div class="b-step-n">1</div>
+              <h3>Pickup Location</h3>
+              <span class="step-lbl">(Step 1 of 4)</span>
+            </div>
+            <div class="loc-row">
+              <div class="loc-input-wrap">
+                <i class="fas fa-home"></i>
+                <input id="loc-input" type="text" placeholder="Jl. Duren Sawit Baru…">
+              </div>
+              <button class="btn-loc" onclick="useLocation()">
+                <i class="fas fa-location-crosshairs"></i> USE CURRENT LOCATION
+              </button>
+            </div>
+            <div class="map-box">
+              <div class="map-pin">📍</div>
+              <div class="map-lbl">Jakarta, Duren Sawit</div>
+            </div>
+          </div>
+
+          <div class="b-step sr">
+            <div class="b-step-hd">
+              <div class="b-step-n">2</div>
+              <h3>Waste Category</h3>
+              <span class="step-lbl">(Step 2 of 4)</span>
+            </div>
+            <div class="wtype-grid">
+              <div class="wtype-card sel" onclick="selWaste(this, 'Residential Recycling')">
+                <div class="wtype-ico">♻</div>
+                <div class="wtype-name">Residential Recycling</div>
+                <div class="wtype-desc">Recycling for residential locations 500–5000 Items, Various Sizes.</div>
+              </div>
+              <div class="wtype-card" onclick="selWaste(this, 'Electronic Waste')">
+                <div class="wtype-ico">💻</div>
+                <div class="wtype-name">Electronic Waste</div>
+                <div class="wtype-desc">Electronic waste within containers, Various Sizes, Various Items.</div>
+              </div>
+              <div class="wtype-card" onclick="selWaste(this, 'Large Furniture')">
+                <div class="wtype-ico">🛋</div>
+                <div class="wtype-name">Large Furniture</div>
+                <div class="wtype-desc">Large items: Sofas, Fridges, Etc. Various Sizes, Requires Large Pickup.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="b-step sr">
+            <div class="b-step-hd">
+              <div class="b-step-n">3</div>
+              <h3>Schedule</h3>
+              <span class="step-lbl">(Step 3 of 4)</span>
+            </div>
+            <div class="cal-row">
+              <div class="cal-box">
+                <div class="cal-hd">May 2025</div>
+                <div class="cal-grid" id="calGrid"></div>
+              </div>
+              <div class="time-box" id="timeBox"></div>
+            </div>
+          </div>
+
+          <div class="b-step sr">
+            <div class="b-step-hd">
+              <div class="b-step-n">4</div>
+              <h3>Select Partner</h3>
+              <span class="step-lbl">(Step 4 of 4)</span>
+            </div>
+            <div class="partner-grid">
+              <div class="partner-card sel" onclick="selPartner(this, 'Joko Angkut')">
+                <div class="partner-ico">🚛</div>
+                <div class="partner-name">Joko Angkut</div>
+                <div class="partner-rating">★★★★★ 4.9</div>
+                <div class="partner-dist">1.2 km away</div>
+              </div>
+              <div class="partner-card" onclick="selPartner(this, 'Mamang Joki')">
+                <div class="partner-ico">🏍</div>
+                <div class="partner-name">Mamang Joki</div>
+                <div class="partner-rating">★★★★☆ 4.6</div>
+                <div class="partner-dist">2.4 km away</div>
+              </div>
+              <div class="partner-card" onclick="selPartner(this, 'Mamang Joki 2')">
+                <div class="partner-ico">♻</div>
+                <div class="partner-name">Mamang Joki 2</div>
+                <div class="partner-rating">★★★★☆ 4.5</div>
+                <div class="partner-dist">3.1 km away</div>
+              </div>
+              <div class="partner-card" onclick="selPartner(this, 'Mamang Joki 3')">
+                <div class="partner-ico">🚚</div>
+                <div class="partner-name">Mamang Joki 3</div>
+                <div class="partner-rating">★★★★★ 4.8</div>
+                <div class="partner-dist">3.8 km away</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="booking-sidebar">
+          <div class="sum-box">
+            <h3>Booking Summary</h3>
+            <div class="sum-row"><span class="lbl">Location</span>  <span class="val" id="sum-loc">–</span></div>
+            <div class="sum-row"><span class="lbl">Waste Type</span><span class="val" id="sum-waste">Residential Recycling</span></div>
+            <div class="sum-row"><span class="lbl">Date</span>      <span class="val" id="sum-date">–</span></div>
+            <div class="sum-row"><span class="lbl">Time</span>      <span class="val" id="sum-time">–</span></div>
+            <div class="sum-row"><span class="lbl">Partner</span>   <span class="val" id="sum-partner">Joko Angkut</span></div>
+            <hr class="sum-divider">
+            <div class="sum-row sum-total">
+              <span class="lbl">Pickup Fee</span>
+              <span class="val">Rp 35.000</span>
+            </div>
+            <div class="book-btns">
+              <button class="btn-confirm" onclick="confirmBook()">CONFIRM AND CALL PARTNER</button>
+              <button class="btn-save"    onclick="saveBook()">SAVE AND COMPLETE LATER</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastTxt"></span></div>
+  <script src="script.js"></script>
+</body>
+</html>
