@@ -10,6 +10,7 @@
 </head>
 <body data-page="market">
 
+  <!-- ══ NAV ══ -->
   <nav>
     <a class="nav-brand" href="index.html"><span class="ico">♻</span> RE-SAIKEL</a>
     <div class="nav-center">
@@ -19,13 +20,78 @@
       <a href="about.html"        id="nl-about">About us</a>
     </div>
     <div class="nav-right">
-      <a href="#" class="login">Log In</a>
-      <a href="#" class="signin">Sign In</a>
+      <button class="nav-cart-btn" onclick="openCart()" title="View cart" aria-label="Cart">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge" id="cartBadge"></span>
+      </button>
+      <a href="#" class="login"  id="nav-login-btn"  onclick="openLogin();return false;">Log In</a>
+      <a href="#" class="signin" id="nav-signin-btn" onclick="openLogin();return false;">Sign In</a>
+      <div class="nav-user-chip" id="nav-user-chip" style="display:none;">
+        <a href="profile.html" style="text-decoration:none;display:flex;align-items:center;gap:7px;">
+          <div class="nav-user-avatar" id="nav-user-avatar">👤</div>
+          <span class="nav-user-name" id="nav-user-name">User</span>
+        </a>
+        <button class="nav-logout-btn" onclick="logout()">Logout</button>
+      </div>
     </div>
   </nav>
 
+  <!-- ══ LOGIN MODAL ══ -->
+  <div class="modal-overlay" id="loginModal" onclick="if(event.target===this)closeLogin()">
+    <div class="login-modal">
+      <div class="lm-header">
+        <div class="brand"><span>♻</span> RE-SAIKEL</div>
+        <button class="lm-close" onclick="closeLogin()">✕</button>
+      </div>
+      <div class="lm-body">
+        <div class="lm-title">Welcome back</div>
+        <div class="lm-sub">Sign in to access your cart and bookings.</div>
+        <form onsubmit="submitLogin(event)">
+          <div class="lm-field">
+            <label>Email address</label>
+            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="lm-field">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <div class="lm-error" id="loginError"></div>
+          <button type="submit" class="lm-submit">LOG IN</button>
+        </form>
+        <div class="lm-hint">
+          <strong>Test accounts:</strong><br>
+          dewi@resaikel.id / dewi123<br>
+          budi@resaikel.id / budi123<br>
+          admin@resaikel.id / admin123
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CART MODAL ══ -->
+  <div class="modal-overlay" id="cartModal" onclick="if(event.target===this)closeCart()">
+    <div class="cart-modal">
+      <div class="cm-header">
+        <div class="cm-title"><i class="fas fa-shopping-cart"></i> Your Cart</div>
+        <button class="cm-close" onclick="closeCart()">✕</button>
+      </div>
+      <div class="cm-body" id="cartItems"></div>
+      <div class="cm-footer">
+        <div class="cm-total-row">
+          <span class="cm-total-lbl">Total</span>
+          <span class="cm-total-val" id="cartTotal">Rp 0</span>
+        </div>
+        <div class="cm-actions">
+          <button class="cm-clear"    onclick="clearCart()">Clear Cart</button>
+          <button class="cm-checkout" onclick="checkoutCart()">Checkout →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <main class="page-shell">
 
+    <!-- Page Hero -->
     <div class="page-hero">
       <div class="page-hero-inner">
         <h1>Recycling Marketplace</h1>
@@ -33,8 +99,11 @@
       </div>
     </div>
 
+    <!-- Marketplace Layout -->
     <div style="background:var(--grey-bg);">
       <div class="mkt-layout">
+
+        <!-- Filter Sidebar -->
         <div class="mkt-filter">
           <h4>Filter</h4>
           <div class="filter-group">
@@ -54,6 +123,7 @@
           </div>
         </div>
 
+        <!-- Products Grid -->
         <div class="mkt-content">
           <div class="mkt-grid">
 
@@ -62,7 +132,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">rPET Pellets (Clear)</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 8.500 / kg</span><span class="mkt-rating">★★★★★</span></div>
-                <button class="mkt-buy" onclick="addCart('rPET Pellets')">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('rPET Pellets','🧴','Rp 8.500/kg',8500)">Buy Now</button>
               </div>
             </div>
 
@@ -71,7 +141,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Recycled Cardboard Bales</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 2.200 / kg</span><span class="mkt-rating">★★★★☆</span></div>
-                <button class="mkt-buy" onclick="addCart('Cardboard Bales')">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Cardboard Bales','📦','Rp 2.200/kg',2200)">Buy Now</button>
               </div>
             </div>
 
@@ -80,7 +150,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Scrap Aluminum (Clean)</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 18.000 / kg</span><span class="mkt-rating">★★★★★</span></div>
-                <button class="mkt-buy" onclick="addCart('Scrap Aluminum')">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Scrap Aluminum','🔩','Rp 18.000/kg',18000)">Buy Now</button>
               </div>
             </div>
 
@@ -89,7 +159,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Eco Compost Mix (5 kg)</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 35.000 / bag</span><span class="mkt-rating">★★★★☆</span></div>
-                <button class="mkt-buy" onclick="addCart('Compost Mix')">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Compost Mix','🌿','Rp 35.000/bag',35000)">Buy Now</button>
               </div>
             </div>
 
@@ -98,7 +168,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Crushed Glass Cullet</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 1.800 / kg</span><span class="mkt-rating">★★★★☆</span></div>
-                <button class="mkt-buy" onclick="addCart('Glass Cullet')">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Glass Cullet','🍶','Rp 1.800/kg',1800)">Buy Now</button>
               </div>
             </div>
 
@@ -107,7 +177,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Textile Fiber Bundles</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 5.500 / kg</span><span class="mkt-rating">★★★★★</span></div>
-                <button class="mkt-buy" onclick="addCart('Textile Fiber')">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Textile Fiber','👕','Rp 5.500/kg',5500)">Buy Now</button>
               </div>
             </div>
 
@@ -116,7 +186,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">PCB Copper Recovery</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 45.000 / kg</span><span class="mkt-rating">★★★★☆</span></div>
-                <button class="mkt-buy" onclick="addCart('PCB Copper')">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('PCB Copper','💻','Rp 45.000/kg',45000)">Buy Now</button>
               </div>
             </div>
 
@@ -125,7 +195,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Biogas Substrate Mix</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 12.000 / unit</span><span class="mkt-rating">★★★★★</span></div>
-                <button class="mkt-buy" onclick="addCart('Biogas Substrate')">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Biogas Substrate','🔋','Rp 12.000/unit',12000)">Buy Now</button>
               </div>
             </div>
 
@@ -137,6 +207,7 @@
 
   </main>
 
+  <!-- ══ FOOTER ══ -->
   <footer>
     <div class="ft-inner">
       <div class="ft-brand">

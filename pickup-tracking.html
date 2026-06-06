@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RE-SAIKEL – Pickup Tracking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Tracking-specific styles ── */
+    body { background: #f2f4f2; }
+
+    .tracking-shell {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 72px 0 40px;
+      min-height: 100vh;
+    }
+
+    /* Map area */
+    .track-map {
+      background: white;
+      border-bottom: 3px solid var(--nav);
+      position: relative;
+      height: 300px;
+      overflow: hidden;
+    }
+    .map-title {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      background: white;
+      border-bottom: 1px solid var(--grey-border);
+      padding: 9px 16px;
+      font-weight: 800;
+      font-size: .85rem;
+      color: var(--text);
+      text-align: center;
+      letter-spacing: .5px;
+      z-index: 10;
+    }
+    /* Fake map SVG */
+    .map-svg-wrap {
+      position: absolute;
+      inset: 38px 0 0 0;
+      overflow: hidden;
+    }
+    .map-svg-wrap svg { width: 100%; height: 100%; }
+
+    /* Driver marker animated */
+    .driver-dot {
+      animation: driverMove 4s ease-in-out infinite alternate;
+    }
+    @keyframes driverMove {
+      0%   { transform: translate(0px,   0px); }
+      50%  { transform: translate(14px, -10px); }
+      100% { transform: translate(28px, -18px); }
+    }
+    .pulse-ring {
+      animation: pulseRing 1.5s ease-out infinite;
+    }
+    @keyframes pulseRing {
+      0%   { r: 10; opacity: .6; }
+      100% { r: 22; opacity: 0; }
+    }
+
+    /* Status + Info card */
+    .track-card {
+      background: white;
+      border-radius: 18px 18px 0 0;
+      margin-top: -18px;
+      position: relative;
+      z-index: 5;
+      padding: 20px 20px 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,.1);
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 50px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .3px;
+    }
+    .status-badge.inprogress { background: #d4f5e2; color: #1a6e3c; }
+    .status-badge.arriving   { background: #fff3cd; color: #856404; }
+    .status-badge.arrived    { background: #d1ecf1; color: #0c5460; }
+    .status-badge .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: currentColor;
+      animation: blink 1.2s ease infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .dist-label { font-size: .76rem; color: var(--text-light); font-weight: 600; }
+    .dist-label i { margin-right: 4px; }
+
+    .driver-name { font-size: 1.3rem; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+    .driver-addr { font-size: .78rem; color: var(--text-light); margin-bottom: 16px; }
+
+    .waste-badge-row { margin-bottom: 20px; }
+    .waste-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--green-light);
+      border: 1.5px solid #b8dfc8;
+      border-radius: 8px;
+      padding: 8px 13px;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--green);
+    }
+    .waste-chip .wico { font-size: 1.1rem; }
+    .waste-chip .wlabel { color: var(--text-light); font-size: .65rem; display: block; font-weight: 500; }
+
+    /* Action buttons */
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--grey-border);
+    }
+    .act-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px;
+      border-radius: 10px;
+      border: 1.5px solid var(--grey-border);
+      background: white;
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      transition: background .15s, border-color .15s;
+    }
+    .act-btn:hover { background: var(--green-light); border-color: var(--green-mid); }
+    .act-btn i { font-size: .9rem; color: var(--green-mid); }
+
+    /* Steps timeline */
+    .steps-timeline {
+      padding: 16px 0;
+    }
+    .tl-title { font-size: .72rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+    .tl-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+      position: relative;
+    }
+    .tl-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 14px; top: 30px;
+      width: 2px; height: calc(100% + 2px);
+      background: var(--grey-border);
+    }
+    .tl-step.done::after { background: var(--green-mid); }
+    .tl-icon {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .75rem; flex-shrink: 0;
+      border: 2px solid var(--grey-border);
+      background: white;
+      color: var(--text-light);
+      position: relative; z-index: 1;
+    }
+    .tl-step.done .tl-icon   { background: var(--green-mid); border-color: var(--green-mid); color: white; }
+    .tl-step.active .tl-icon { background: white; border-color: var(--green-mid); color: var(--green-mid); animation: pulseIcon .8s ease infinite alternate; }
+    @keyframes pulseIcon { from { box-shadow:0 0 0 0 rgba(46,139,87,.4); } to { box-shadow:0 0 0 7px rgba(46,139,87,0); } }
+    .tl-text h5  { font-weight: 700; font-size: .8rem; color: var(--text); margin-bottom: 2px; }
+    .tl-text p   { font-size: .71rem; color: var(--text-light); line-height: 1.4; }
+    .tl-time     { margin-left: auto; font-size: .67rem; color: var(--text-light); white-space: nowrap; flex-shrink: 0; padding-top: 4px; }
+
+    /* Confirm button */
+    .confirm-strip {
+      position: sticky;
+      bottom: 0;
+      background: white;
+      padding: 14px 20px 20px;
+      border-top: 1px solid var(--grey-border);
+      box-shadow: 0 -4px 16px rgba(0,0,0,.07);
+    }
+    .btn-confirm-pickup {
+      width: 100%;
+      background: var(--green-btn);
+      color: white;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: .9rem;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+      transition: background .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      letter-spacing: .3px;
+    }
+    .btn-confirm-pickup:hover { background: #153d27; }
+    .btn-confirm-pickup:disabled { background: var(--grey-card); color: var(--text-light); cursor: default; }
+
+    /* ETA chip */
+    .eta-chip {
+      background: var(--nav);
+      color: white;
+      border-radius: 8px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .eta-chip .eta-left { font-size: .75rem; color: rgba(255,255,255,.65); }
+    .eta-chip .eta-val  { font-size: 1.2rem; font-weight: 900; color: white; }
+    .eta-chip .eta-sub  { font-size: .65rem; color: rgba(255,255,255,.5); }
+    .eta-right { text-align: right; }
+
+    /* Rating modal */
+    .rating-overlay {
+      position: fixed; inset: 0;
+      background: rgba(15,30,20,.6);
+      backdrop-filter: blur(4px);
+      z-index: 900;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .rating-overlay.open { display: flex; }
+    .rating-box {
+      background: white;
+      border-radius: 18px;
+      width: 340px;
+      padding: 28px 24px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,.25);
+      animation: modalIn .25s ease;
+    }
+    .rating-ico  { font-size: 3rem; margin-bottom: 10px; }
+    .rating-title{ font-weight: 800; font-size: 1.1rem; color: var(--text); margin-bottom: 5px; }
+    .rating-sub  { font-size: .8rem; color: var(--text-light); margin-bottom: 18px; }
+    .stars-row   { display: flex; justify-content: center; gap: 8px; margin-bottom: 18px; }
+    .star-btn {
+      font-size: 2rem; cursor: pointer; color: var(--grey-border);
+      transition: color .1s, transform .1s;
+      background: none; border: none;
+    }
+    .star-btn:hover,
+    .star-btn.lit { color: #e8a020; transform: scale(1.2); }
+    .points-earned {
+      background: var(--green-light);
+      border: 1.5px solid #b8dfc8;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .pe-label { font-size: .72rem; color: var(--text-light); margin-bottom: 3px; }
+    .pe-val   { font-size: 1.6rem; font-weight: 900; color: var(--green-mid); }
+    .pe-sub   { font-size: .7rem; color: var(--text-light); }
+    .btn-done {
+      width: 100%;
+      background: var(--green-btn);
+      color: white;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: .85rem;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+    }
+    .btn-done:hover { background: #153d27; }
+  </style>
+</head>
+<body data-page="book">
+
+  <!-- ══ NAV ══ -->
+  <nav>
+    <a class="nav-brand" href="index.html"><span class="ico">♻</span> RE-SAIKEL</a>
+    <div class="nav-center">
+      <a href="index.html"        id="nl-home">Home</a>
+      <a href="services.html"     id="nl-services">Recycling Services</a>
+      <a href="how-it-works.html" id="nl-how">How It Works</a>
+      <a href="about.html"        id="nl-about">About us</a>
+    </div>
+    <div class="nav-right">
+      <button class="nav-cart-btn" onclick="openCart()" title="View cart" aria-label="Cart">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge" id="cartBadge"></span>
+      </button>
+      <a href="#" class="login"  id="nav-login-btn"  onclick="openLogin();return false;">Log In</a>
+      <a href="#" class="signin" id="nav-signin-btn" onclick="openLogin();return false;">Sign In</a>
+      <div class="nav-user-chip" id="nav-user-chip" style="display:none;">
+        <a href="profile.html" style="text-decoration:none;display:flex;align-items:center;gap:7px;">
+          <div class="nav-user-avatar" id="nav-user-avatar">👤</div>
+          <span class="nav-user-name" id="nav-user-name">User</span>
+        </a>
+        <button class="nav-logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══ LOGIN MODAL ══ -->
+  <div class="modal-overlay" id="loginModal" onclick="if(event.target===this)closeLogin()">
+    <div class="login-modal">
+      <div class="lm-header">
+        <div class="brand"><span>♻</span> RE-SAIKEL</div>
+        <button class="lm-close" onclick="closeLogin()">✕</button>
+      </div>
+      <div class="lm-body">
+        <div class="lm-title">Welcome back</div>
+        <div class="lm-sub">Sign in to access your cart and bookings.</div>
+        <form onsubmit="submitLogin(event)">
+          <div class="lm-field"><label>Email address</label><input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email"></div>
+          <div class="lm-field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"></div>
+          <div class="lm-error" id="loginError"></div>
+          <button type="submit" class="lm-submit">LOG IN</button>
+        </form>
+        <div class="lm-hint"><strong>Test accounts:</strong><br>dewi@resaikel.id / dewi123<br>budi@resaikel.id / budi123<br>admin@resaikel.id / admin123</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CART MODAL ══ -->
+  <div class="modal-overlay" id="cartModal" onclick="if(event.target===this)closeCart()">
+    <div class="cart-modal">
+      <div class="cm-header"><div class="cm-title"><i class="fas fa-shopping-cart"></i> Your Cart</div><button class="cm-close" onclick="closeCart()">✕</button></div>
+      <div class="cm-body" id="cartItems"></div>
+      <div class="cm-footer">
+        <div class="cm-total-row"><span class="cm-total-lbl">Total</span><span class="cm-total-val" id="cartTotal">Rp 0</span></div>
+        <div class="cm-actions"><button class="cm-clear" onclick="clearCart()">Clear Cart</button><button class="cm-checkout" onclick="checkoutCart()">Checkout →</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RATING MODAL ══ -->
+  <div class="rating-overlay" id="ratingModal">
+    <div class="rating-box">
+      <div class="rating-ico">🎉</div>
+      <div class="rating-title">Pickup Complete!</div>
+      <div class="rating-sub">How was your experience with <strong id="ratingDriverName">Joko Angkut</strong>?</div>
+      <div class="stars-row" id="starsRow">
+        <button class="star-btn" onclick="rateStar(1)">★</button>
+        <button class="star-btn" onclick="rateStar(2)">★</button>
+        <button class="star-btn" onclick="rateStar(3)">★</button>
+        <button class="star-btn" onclick="rateStar(4)">★</button>
+        <button class="star-btn lit" onclick="rateStar(5)">★</button>
+      </div>
+      <div class="points-earned">
+        <div class="pe-label">Green Points Earned</div>
+        <div class="pe-val" id="pointsEarned">+150 pts</div>
+        <div class="pe-sub">Added to your RE-SAIKEL wallet</div>
+      </div>
+      <button class="btn-done" onclick="finishPickup()">View My Profile →</button>
+    </div>
+  </div>
+
+  <!-- ══ TRACKING UI ══ -->
+  <div class="tracking-shell">
+
+    <!-- Map -->
+    <div class="track-map">
+      <div class="map-title">PICKUP LOCATION</div>
+      <div class="map-svg-wrap">
+        <svg viewBox="0 0 480 262" xmlns="http://www.w3.org/2000/svg">
+          <!-- Base map background -->
+          <rect width="480" height="262" fill="#e8f0e4"/>
+
+          <!-- Roads - horizontal -->
+          <rect x="0"   y="80"  width="480" height="12" fill="#fff" opacity=".9"/>
+          <rect x="0"   y="130" width="480" height="10" fill="#fff" opacity=".9"/>
+          <rect x="0"   y="180" width="480" height="8"  fill="#fff" opacity=".85"/>
+          <rect x="0"   y="220" width="480" height="8"  fill="#fff" opacity=".85"/>
+          <!-- Roads - vertical -->
+          <rect x="80"  y="0"   width="10" height="262" fill="#fff" opacity=".9"/>
+          <rect x="160" y="0"   width="10" height="262" fill="#fff" opacity=".85"/>
+          <rect x="240" y="0"   width="10" height="262" fill="#fff" opacity=".9"/>
+          <rect x="330" y="0"   width="10" height="262" fill="#fff" opacity=".85"/>
+          <rect x="400" y="0"   width="10" height="262" fill="#fff" opacity=".85"/>
+
+          <!-- Green belt / park -->
+          <rect x="160" y="80" width="80" height="50" rx="6" fill="#a8d5a2" opacity=".8"/>
+          <text x="200" y="100" fill="#2e7d32" font-size="7" text-anchor="middle" font-family="sans-serif" font-weight="bold">Green Belt</text>
+          <text x="200" y="110" fill="#388e3c" font-size="6" text-anchor="middle" font-family="sans-serif">Football Ground</text>
+
+          <!-- Blue area park -->
+          <rect x="50" y="150" width="60" height="45" rx="6" fill="#bbdefb" opacity=".7"/>
+          <text x="80" y="175" fill="#1565c0" font-size="6" text-anchor="middle" font-family="sans-serif">Park 9</text>
+
+          <!-- Sector labels -->
+          <text x="295" y="60"  fill="#78909c" font-size="8" font-family="sans-serif" font-weight="600">SECTOR 17</text>
+          <text x="120" y="60"  fill="#78909c" font-size="7" font-family="sans-serif">17E</text>
+          <text x="200" y="60"  fill="#78909c" font-size="7" font-family="sans-serif">17F</text>
+          <text x="270" y="60"  fill="#78909c" font-size="7" font-family="sans-serif">17G</text>
+          <text x="20"  y="110" fill="#78909c" font-size="7" font-family="sans-serif">17H</text>
+          <text x="20"  y="80"  fill="#78909c" font-size="7" font-family="sans-serif">23B</text>
+          <text x="20"  y="155" fill="#78909c" font-size="7" font-family="sans-serif">22A</text>
+          <text x="240" y="205" fill="#78909c" font-size="7" font-family="sans-serif">SECTOR 22C</text>
+          <text x="380" y="155" fill="#78909c" font-size="7" font-family="sans-serif">Sector 18</text>
+          <text x="395" y="205" fill="#78909c" font-size="7" font-family="sans-serif">SECTOR 1</text>
+
+          <!-- Route path -->
+          <polyline points="95,200 95,180 165,180 165,130 245,130 245,85 340,85"
+                    fill="none" stroke="#1976d2" stroke-width="4" stroke-linecap="round"
+                    stroke-linejoin="round" stroke-dasharray="8,4" opacity=".85"/>
+
+          <!-- Destination pin (red) -->
+          <g transform="translate(330,68)">
+            <circle cx="0" cy="0" r="10" fill="#e53935"/>
+            <circle cx="0" cy="0" r="4"  fill="white"/>
+            <polygon points="0,10 -5,0 5,0" fill="#e53935"/>
+          </g>
+          <text x="345" y="60" fill="#c62828" font-size="7" font-family="sans-serif" font-weight="700">You</text>
+
+          <!-- Driver dot (animated) -->
+          <g class="driver-dot" transform="translate(95,200)">
+            <circle class="pulse-ring" cx="0" cy="0" r="10" fill="none" stroke="#1c5c3a" stroke-width="2" opacity=".5"/>
+            <circle cx="0" cy="0" r="12" fill="white" opacity=".9"/>
+            <text x="0" y="5" text-anchor="middle" font-size="11">🚛</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Info Card -->
+    <div class="track-card">
+
+      <div class="status-row">
+        <div class="status-badge inprogress" id="statusBadge">
+          <div class="dot"></div>
+          <span id="statusText">In Progress</span>
+        </div>
+        <div class="dist-label"><i class="fas fa-route"></i><span id="distLabel">2.5 km away</span></div>
+      </div>
+
+      <div class="eta-chip">
+        <div>
+          <div class="eta-left">Estimated Arrival</div>
+          <div class="eta-val" id="etaVal">12 min</div>
+        </div>
+        <div class="eta-right">
+          <div class="eta-left">Pickup Time</div>
+          <div style="color:white;font-weight:700;font-size:.85rem;" id="pickupTime">14:00</div>
+          <div class="eta-sub">May 17, 2025</div>
+        </div>
+      </div>
+
+      <div class="driver-name" id="driverName">Joko Angkut</div>
+      <div class="driver-addr">🚛 &nbsp;Truck · B 1234 RSK &nbsp;·&nbsp; ★4.9</div>
+
+      <div class="waste-badge-row">
+        <div class="waste-chip">
+          <span class="wico">♻</span>
+          <div>
+            <span class="wlabel">WASTE CATEGORY</span>
+            <span id="wasteLabel">Residential Recycling</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="act-btn" onclick="callDriver()"><i class="fas fa-phone"></i> Call</button>
+        <button class="act-btn" onclick="msgDriver()"><i class="fas fa-comment"></i> Message</button>
+      </div>
+
+      <!-- Timeline -->
+      <div class="steps-timeline">
+        <div class="tl-title">Pickup Progress</div>
+
+        <div class="tl-step done">
+          <div class="tl-icon"><i class="fas fa-check"></i></div>
+          <div class="tl-text">
+            <h5>Booking Confirmed</h5>
+            <p>Your pickup request was accepted</p>
+          </div>
+          <div class="tl-time">13:45</div>
+        </div>
+
+        <div class="tl-step done">
+          <div class="tl-icon"><i class="fas fa-check"></i></div>
+          <div class="tl-text">
+            <h5>Driver Assigned</h5>
+            <p>Joko Angkut is heading to you</p>
+          </div>
+          <div class="tl-time">13:52</div>
+        </div>
+
+        <div class="tl-step active" id="tlStep3">
+          <div class="tl-icon"><i class="fas fa-truck"></i></div>
+          <div class="tl-text">
+            <h5>On The Way</h5>
+            <p id="tlStep3Text">Driver is 2.5 km from your location</p>
+          </div>
+          <div class="tl-time" id="tlStep3Time">Now</div>
+        </div>
+
+        <div class="tl-step" id="tlStep4">
+          <div class="tl-icon"><i class="fas fa-map-marker-alt"></i></div>
+          <div class="tl-text">
+            <h5>Driver Arrived</h5>
+            <p>Driver at your pickup point</p>
+          </div>
+          <div class="tl-time" id="tlStep4Time">~14:00</div>
+        </div>
+
+        <div class="tl-step" id="tlStep5">
+          <div class="tl-icon"><i class="fas fa-recycle"></i></div>
+          <div class="tl-text">
+            <h5>Pickup Complete</h5>
+            <p>Waste collected & points credited</p>
+          </div>
+          <div class="tl-time" id="tlStep5Time">–</div>
+        </div>
+      </div>
+
+    </div><!-- end track-card -->
+
+    <!-- Confirm strip -->
+    <div class="confirm-strip">
+      <button class="btn-confirm-pickup" id="confirmPickupBtn" onclick="arriveAndConfirm()" disabled>
+        <i class="fas fa-check-circle"></i> Arrived &amp; Confirm Pickup
+      </button>
+      <p style="text-align:center;font-size:.68rem;color:var(--text-light);margin-top:7px;" id="confirmHint">
+        Button enabled when driver arrives
+      </p>
+    </div>
+
+  </div><!-- end tracking-shell -->
+
+  <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastTxt"></span></div>
+
+  <script src="script.js"></script>
+  <script>
+    /* ── Tracking page logic ── */
+
+    // Read booking params from URL or localStorage
+    const params    = new URLSearchParams(location.search);
+    const bookingData = JSON.parse(localStorage.getItem('rs_active_booking') || '{}');
+
+    const driverName  = params.get('driver')  || bookingData.partner  || 'Joko Angkut';
+    const wasteType   = params.get('waste')   || bookingData.waste    || 'Residential Recycling';
+    const pickupTime  = params.get('time')    || bookingData.time     || '14:00';
+
+    document.getElementById('driverName').textContent     = driverName;
+    document.getElementById('wasteLabel').textContent     = wasteType;
+    document.getElementById('pickupTime').textContent     = pickupTime;
+    document.getElementById('ratingDriverName').textContent = driverName;
+
+    // Simulate driver approaching — countdown ETA
+    let etaMin   = 12;
+    let distKm   = 2.5;
+    let phase    = 'approaching'; // approaching → arrived → done
+
+    const etaEl   = document.getElementById('etaVal');
+    const distEl  = document.getElementById('distLabel');
+    const btn     = document.getElementById('confirmPickupBtn');
+    const hint    = document.getElementById('confirmHint');
+
+    const timer = setInterval(() => {
+      if (phase === 'approaching') {
+        etaMin  = Math.max(0, etaMin - 1);
+        distKm  = Math.max(0, +(distKm - 0.2).toFixed(1));
+        etaEl.textContent  = etaMin > 0 ? `${etaMin} min` : 'Arriving…';
+        distEl.textContent = distKm > 0 ? `${distKm} km away` : 'Arrived';
+
+        if (etaMin <= 0) {
+          phase = 'arrived';
+          driverArrived();
+        }
+      }
+    }, 3000); // fast demo: 3s per simulated minute
+
+    function driverArrived() {
+      clearInterval(timer);
+
+      // Status badge
+      const badge = document.getElementById('statusBadge');
+      badge.className = 'status-badge arriving';
+      document.getElementById('statusText').textContent = 'Driver Arrived';
+
+      // Timeline step 4
+      const s4 = document.getElementById('tlStep4');
+      document.getElementById('tlStep3').classList.remove('active');
+      document.getElementById('tlStep3').classList.add('done');
+      document.getElementById('tlStep3Text').textContent = 'Driver reached your location';
+      s4.classList.add('active');
+      document.getElementById('tlStep4Time').textContent = 'Now';
+
+      // Enable button
+      btn.disabled = false;
+      btn.style.animation = 'pulseIcon .6s ease infinite alternate';
+      hint.textContent = 'Tap to confirm & complete pickup';
+      showToast('🚛 Driver has arrived at your location!');
+    }
+
+    function arriveAndConfirm() {
+      if (phase !== 'arrived') return;
+      phase = 'done';
+      btn.disabled = true;
+
+      // Timeline step 5
+      const s5 = document.getElementById('tlStep5');
+      document.getElementById('tlStep4').classList.remove('active');
+      document.getElementById('tlStep4').classList.add('done');
+      s5.classList.add('active');
+      document.getElementById('tlStep5Time').textContent = 'Now';
+      document.getElementById('statusBadge').className = 'status-badge arrived';
+      document.getElementById('statusText').textContent = 'Completed';
+
+      // Award points to user
+      const pointsToAdd = wasteType === 'Electronic Waste' ? 200
+                        : wasteType === 'Large Furniture'  ? 120
+                        : 150;
+      const kgRecycled  = wasteType === 'Electronic Waste' ? 8.0
+                        : wasteType === 'Large Furniture'  ? 40.0
+                        : 12.5;
+
+      awardPickupPoints(pointsToAdd, kgRecycled);
+      document.getElementById('pointsEarned').textContent = `+${pointsToAdd} pts`;
+
+      setTimeout(() => {
+        document.getElementById('ratingModal').classList.add('open');
+      }, 600);
+    }
+
+    function awardPickupPoints(pts, kg) {
+      const user = getUser();
+      if (!user) return;
+      user.points          = (user.points || 0) + pts;
+      user.totalKgRecycled = +(((user.totalKgRecycled || 0) + kg).toFixed(1));
+      user.totalCO2Saved   = +(((user.totalCO2Saved   || 0) + kg * 2.5).toFixed(1));
+      user.totalTransactions = (user.totalTransactions || 0) + 1;
+
+      if (!user.history) user.history = [];
+      user.history.unshift({
+        id: 'TX' + Date.now(),
+        type: 'pickup',
+        label: wasteType,
+        kg, points: pts,
+        co2: +(kg * 2.5).toFixed(1),
+        date: new Date().toISOString().slice(0,10),
+        status: 'completed'
+      });
+      localStorage.setItem('rs_auth_user', JSON.stringify(user));
+    }
+
+    let selectedRating = 5;
+    function rateStar(n) {
+      selectedRating = n;
+      document.querySelectorAll('.star-btn').forEach((s, i) => {
+        s.classList.toggle('lit', i < n);
+      });
+    }
+
+    function callDriver()  { showToast('📞 Calling ' + driverName + '…'); }
+    function msgDriver()   { showToast('💬 Opening chat with ' + driverName + '…'); }
+
+    function finishPickup() {
+      document.getElementById('ratingModal').classList.remove('open');
+      localStorage.removeItem('rs_active_booking');
+      window.location.href = 'profile.html';
+    }
+  </script>
+</body>
+</html>

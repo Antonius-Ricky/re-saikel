@@ -10,7 +10,7 @@
 </head>
 <body data-page="services">
 
-
+  <!-- ══ NAV ══ -->
   <nav>
     <a class="nav-brand" href="index.html"><span class="ico">♻</span> RE-SAIKEL</a>
     <div class="nav-center">
@@ -20,13 +20,78 @@
       <a href="about.html"        id="nl-about">About us</a>
     </div>
     <div class="nav-right">
-      <a href="#" class="login">Log In</a>
-      <a href="#" class="signin">Sign In</a>
+      <button class="nav-cart-btn" onclick="openCart()" title="View cart" aria-label="Cart">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge" id="cartBadge"></span>
+      </button>
+      <a href="#" class="login"  id="nav-login-btn"  onclick="openLogin();return false;">Log In</a>
+      <a href="#" class="signin" id="nav-signin-btn" onclick="openLogin();return false;">Sign In</a>
+      <div class="nav-user-chip" id="nav-user-chip" style="display:none;">
+        <a href="profile.html" style="text-decoration:none;display:flex;align-items:center;gap:7px;">
+          <div class="nav-user-avatar" id="nav-user-avatar">👤</div>
+          <span class="nav-user-name" id="nav-user-name">User</span>
+        </a>
+        <button class="nav-logout-btn" onclick="logout()">Logout</button>
+      </div>
     </div>
   </nav>
 
+  <!-- ══ LOGIN MODAL ══ -->
+  <div class="modal-overlay" id="loginModal" onclick="if(event.target===this)closeLogin()">
+    <div class="login-modal">
+      <div class="lm-header">
+        <div class="brand"><span>♻</span> RE-SAIKEL</div>
+        <button class="lm-close" onclick="closeLogin()">✕</button>
+      </div>
+      <div class="lm-body">
+        <div class="lm-title">Welcome back</div>
+        <div class="lm-sub">Sign in to access your cart and bookings.</div>
+        <form onsubmit="submitLogin(event)">
+          <div class="lm-field">
+            <label>Email address</label>
+            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="lm-field">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <div class="lm-error" id="loginError"></div>
+          <button type="submit" class="lm-submit">LOG IN</button>
+        </form>
+        <div class="lm-hint">
+          <strong>Test accounts:</strong><br>
+          dewi@resaikel.id / dewi123<br>
+          budi@resaikel.id / budi123<br>
+          admin@resaikel.id / admin123
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CART MODAL ══ -->
+  <div class="modal-overlay" id="cartModal" onclick="if(event.target===this)closeCart()">
+    <div class="cart-modal">
+      <div class="cm-header">
+        <div class="cm-title"><i class="fas fa-shopping-cart"></i> Your Cart</div>
+        <button class="cm-close" onclick="closeCart()">✕</button>
+      </div>
+      <div class="cm-body" id="cartItems"></div>
+      <div class="cm-footer">
+        <div class="cm-total-row">
+          <span class="cm-total-lbl">Total</span>
+          <span class="cm-total-val" id="cartTotal">Rp 0</span>
+        </div>
+        <div class="cm-actions">
+          <button class="cm-clear"    onclick="clearCart()">Clear Cart</button>
+          <button class="cm-checkout" onclick="checkoutCart()">Checkout →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <main class="page-shell">
 
+    <!-- Page Hero -->
     <div class="page-hero">
       <div class="page-hero-inner">
         <h1>Recycling Services</h1>
@@ -34,17 +99,28 @@
       </div>
     </div>
 
+    <!-- Services Grid -->
     <div style="background:var(--grey-bg);padding:28px 40px;">
       <div class="container">
         <div class="svc-grid">
 
-          <div class="svc-card sr">
+          <div class="svc-card sr"  onclick="window.location.href='booking.html'">
             <div class="svc-img">🏠</div>
             <div class="svc-body">
               <div class="svc-tag">Popular</div>
               <h4>Residential Recycling</h4>
               <p>Doorstep collection for households. Schedule, track, and earn green points for every kilogram you recycle from home.</p>
               <div class="svc-price">From Rp 25.000 / pickup</div>
+            </div>
+          </div>
+
+          <div class="svc-card sr" onclick="window.location.href='marketplace.html'">
+            <div class="svc-img">🔄</div>
+            <div class="svc-body">
+              <div class="svc-tag">Marketplace</div>
+              <h4>Recyled Product</h4>
+              <p>Discover and sell unique products made from recycled materials, giving waste a second life while promoting sustainable living.</p>
+              <div class="svc-price">Discover more</div>
             </div>
           </div>
 
@@ -55,16 +131,6 @@
               <h4>Business Waste Solutions</h4>
               <p>Custom plans for offices, restaurants, and factories. Bulk pickups, compliance reports, and dedicated account management.</p>
               <div class="svc-price">Custom pricing</div>
-            </div>
-          </div>
-
-          <div class="svc-card sr">
-            <div class="svc-img">🔄</div>
-            <div class="svc-body">
-              <div class="svc-tag">Marketplace</div>
-              <h4>Material Trading</h4>
-              <p>Trade recyclable raw materials — plastic pellets, scrap metal, cardboard bales — through our verified B2B exchange.</p>
-              <div class="svc-price">Free to list</div>
             </div>
           </div>
 
@@ -104,6 +170,7 @@
 
   </main>
 
+  <!-- ══ FOOTER ══ -->
   <footer>
     <div class="ft-inner">
       <div class="ft-brand">

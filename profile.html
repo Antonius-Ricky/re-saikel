@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RE-SAIKEL – My Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+  </style>
+</head>
+<body data-page="profile">
+
+  <!-- ══ NAV ══ -->
+  <nav>
+    <a class="nav-brand" href="index.html"><span class="ico">♻</span> RE-SAIKEL</a>
+    <div class="nav-center">
+      <a href="index.html"        id="nl-home">Home</a>
+      <a href="services.html"     id="nl-services">Recycling Services</a>
+      <a href="how-it-works.html" id="nl-how">How It Works</a>
+      <a href="about.html"        id="nl-about">About us</a>
+    </div>
+    <div class="nav-right">
+      <button class="nav-cart-btn" onclick="openCart()" title="View cart" aria-label="Cart">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge" id="cartBadge"></span>
+      </button>
+      <a href="#" class="login"  id="nav-login-btn"  onclick="openLogin();return false;">Log In</a>
+      <a href="#" class="signin" id="nav-signin-btn" onclick="openLogin();return false;">Sign In</a>
+      <div class="nav-user-chip" id="nav-user-chip" style="display:none;">
+        <a href="profile.html" style="text-decoration:none;display:flex;align-items:center;gap:7px;">
+          <div class="nav-user-avatar" id="nav-user-avatar">👤</div>
+          <span class="nav-user-name" id="nav-user-name">User</span>
+        </a>
+        <button class="nav-logout-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══ LOGIN MODAL ══ -->
+  <div class="modal-overlay" id="loginModal" onclick="if(event.target===this)closeLogin()">
+    <div class="login-modal">
+      <div class="lm-header"><div class="brand"><span>♻</span> RE-SAIKEL</div><button class="lm-close" onclick="closeLogin()">✕</button></div>
+      <div class="lm-body">
+        <div class="lm-title">Welcome back</div>
+        <div class="lm-sub">Sign in to view your profile.</div>
+        <form onsubmit="submitLogin(event)">
+          <div class="lm-field"><label>Email address</label><input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email"></div>
+          <div class="lm-field"><label>Password</label><input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password"></div>
+          <div class="lm-error" id="loginError"></div>
+          <button type="submit" class="lm-submit">LOG IN</button>
+        </form>
+        <div class="lm-hint"><strong>Test accounts:</strong><br>dewi@resaikel.id / dewi123<br>budi@resaikel.id / budi123<br>admin@resaikel.id / admin123</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CART MODAL ══ -->
+  <div class="modal-overlay" id="cartModal" onclick="if(event.target===this)closeCart()">
+    <div class="cart-modal">
+      <div class="cm-header"><div class="cm-title"><i class="fas fa-shopping-cart"></i> Your Cart</div><button class="cm-close" onclick="closeCart()">✕</button></div>
+      <div class="cm-body" id="cartItems"></div>
+      <div class="cm-footer">
+        <div class="cm-total-row"><span class="cm-total-lbl">Total</span><span class="cm-total-val" id="cartTotal">Rp 0</span></div>
+        <div class="cm-actions"><button class="cm-clear" onclick="clearCart()">Clear Cart</button><button class="cm-checkout" onclick="checkoutCart()">Checkout →</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ REDEEM MODAL ══ -->
+  <div class="modal-overlay" id="redeemModal" onclick="if(event.target===this)closeRedeem()">
+    <div class="login-modal">
+      <div class="lm-header">
+        <div class="brand">🎁 Redeem Points</div>
+        <button class="lm-close" onclick="closeRedeem()">✕</button>
+      </div>
+      <div class="lm-body">
+        <div id="redeemContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PROFILE PAGE ══ -->
+  <main class="page-shell">
+
+    <!-- ── Hero Banner ── -->
+    <div class="profile-hero">
+      <div class="ph-inner">
+        <div class="ph-top">
+          <div class="ph-avatar" id="ph-avatar">👤</div>
+          <div class="ph-info">
+            <div class="ph-name"  id="ph-name">Loading…</div>
+            <div class="ph-email" id="ph-email">–</div>
+            <div class="ph-since" id="ph-since">Member since –</div>
+            <div class="ph-badge" id="ph-badge">Eco Starter</div>
+          </div>
+          <button class="ph-edit-btn"><i class="fas fa-pen" style="margin-right:5px;"></i>Edit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Stat Cards ── -->
+    <div class="stat-cards-wrap">
+      <div class="stat-cards">
+        <div class="stat-card sr">
+          <div class="stat-card-ico">♻</div>
+          <div class="stat-card-val" id="sc-kg">–</div>
+          <div class="stat-card-lbl">Total Recycled</div>
+          <div class="stat-card-sub" id="sc-kg-sub">kg collected</div>
+        </div>
+        <div class="stat-card sr">
+          <div class="stat-card-ico" style="background:#e3f2fd;">🌿</div>
+          <div class="stat-card-val" id="sc-co2">–</div>
+          <div class="stat-card-lbl">CO₂ Saved</div>
+          <div class="stat-card-sub" id="sc-co2-sub">kg emission reduced</div>
+        </div>
+        <div class="stat-card sr">
+          <div class="stat-card-ico" style="background:#fff3e0;">⭐</div>
+          <div class="stat-card-val" id="sc-pts">–</div>
+          <div class="stat-card-lbl">Green Points</div>
+          <div class="stat-card-sub">redeemable wallet</div>
+        </div>
+        <div class="stat-card sr">
+          <div class="stat-card-ico" style="background:#fce4ec;">📦</div>
+          <div class="stat-card-val" id="sc-tx">–</div>
+          <div class="stat-card-lbl">Transactions</div>
+          <div class="stat-card-sub">pickups + purchases</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Main content ── -->
+    <div style="max-width:1100px;margin:0 auto;padding:28px 40px;">
+
+      <!-- Tabs -->
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('overview',this)">Overview</button>
+        <button class="tab-btn"        onclick="switchTab('rewards',this)">Rewards Shop</button>
+        <button class="tab-btn"        onclick="switchTab('history',this)">History</button>
+      </div>
+
+      <!-- ── TAB: OVERVIEW ── -->
+      <div class="tab-pane active" id="tab-overview">
+
+        <!-- Points wallet -->
+        <div class="points-wallet" id="pointsWallet">
+          <div class="pw-left">
+            <div class="pw-label">My Green Points</div>
+            <div class="pw-points" id="pw-pts">0</div>
+            <div class="pw-sub">Use points to redeem eco rewards</div>
+            <div class="level-bar-wrap">
+              <div class="level-row">
+                <span id="levelLabel">Eco Starter</span>
+                <span id="levelNext">→ 500 pts for Eco Explorer</span>
+              </div>
+              <div class="level-bar">
+                <div class="level-fill" id="levelFill" style="width:0%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="pw-right">
+            <div class="pw-icon">⭐</div>
+            <button class="btn-redeem" onclick="switchTab('rewards', document.querySelector('.tab-btn:nth-child(2)'))">Redeem →</button>
+          </div>
+        </div>
+
+        <!-- Eco impact -->
+        <div class="sec-hd"><h2>Environmental Impact</h2></div>
+        <div class="eco-row">
+          <div class="eco-card co2">
+            <div class="eco-card-ico">🌿</div>
+            <div class="eco-card-val" id="eco-co2">0</div>
+            <div class="eco-card-unit">kg CO₂ Equivalent</div>
+            <div class="eco-card-lbl">Carbon emissions prevented</div>
+            <div class="eco-mini-bar"><div class="eco-mini-fill" id="eco-co2-bar" style="width:0%"></div></div>
+          </div>
+          <div class="eco-card kg">
+            <div class="eco-card-ico">♻</div>
+            <div class="eco-card-val" id="eco-kg">0</div>
+            <div class="eco-card-unit">kg Recycled</div>
+            <div class="eco-card-lbl">Waste diverted from landfill</div>
+            <div class="eco-mini-bar"><div class="eco-mini-fill" id="eco-kg-bar" style="width:0%"></div></div>
+          </div>
+        </div>
+
+        <!-- Recent activity -->
+        <div class="sec-hd">
+          <h2>Recent Activity</h2>
+          <a href="#" onclick="switchTab('history',document.querySelector('.tab-btn:nth-child(3)'));return false;">View all →</a>
+        </div>
+        <div class="history-list" id="recentHistory"></div>
+
+      </div>
+
+      <!-- ── TAB: REWARDS ── -->
+      <div class="tab-pane" id="tab-rewards">
+        <div class="sec-hd"><h2>Redeem Your Points</h2><span id="shop-pts-display" style="font-size:.8rem;color:var(--green-mid);font-weight:700;"></span></div>
+        <div class="reward-grid" id="rewardGrid"></div>
+      </div>
+
+      <!-- ── TAB: HISTORY ── -->
+      <div class="tab-pane" id="tab-history">
+        <div class="sec-hd"><h2>All Transactions</h2></div>
+        <div class="history-list" id="fullHistory"></div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="ft-inner">
+      <div class="ft-brand">
+        <div class="logo"><span>♻</span> RE-SAIKEL</div>
+        <p>Building a smarter and more sustainable recycling ecosystem through technology and community.</p>
+        <div class="ft-social">
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+          <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+      <div class="ft-col"><h4>Navigation</h4><a href="index.html">Home</a><a href="services.html">Services</a><a href="how-it-works.html">How It Works</a><a href="about.html">About</a></div>
+      <div class="ft-col"><h4>Account</h4><a href="profile.html">My Profile</a><a href="booking.html">Book Pickup</a><a href="marketplace.html">Marketplace</a></div>
+      <div class="ft-col"><h4>Contact</h4><a href="#">hello@re-saikel.id</a><a href="#">+62 21 1234 5678</a><a href="#">Jakarta, Indonesia</a></div>
+    </div>
+    <div class="ft-bottom"><span>© 2025 RE-SAIKEL. All rights reserved.</span><span>Privacy Policy · Terms of Service</span></div>
+  </footer>
+
+  <div class="toast" id="toast"><i class="fas fa-check-circle"></i><span id="toastTxt"></span></div>
+  <script src="script.js"></script>
+  <script>
+  /* ── Profile page logic ── */
+
+  const REWARDS = [
+    { id:'R01', name:'Free Pickup',         emoji:'🚛', cost:200,  desc:'One free residential pickup' },
+    { id:'R02', name:'Eco Tote Bag',         emoji:'👜', cost:150,  desc:'Recycled canvas tote bag' },
+    { id:'R03', name:'Plant Sapling',        emoji:'🌱', cost:100,  desc:'Native tree seedling kit' },
+    { id:'R04', name:'Compost Set',          emoji:'🌿', cost:300,  desc:'Home composting starter' },
+    { id:'R05', name:'RE-SAIKEL Cap',        emoji:'🧢', cost:250,  desc:'Eco-branded merchandise' },
+    { id:'R06', name:'Priority Pickup',      emoji:'⚡', cost:400,  desc:'Same-day pickup slot' },
+    { id:'R07', name:'Marketplace Voucher',  emoji:'🎟', cost:500,  desc:'Rp 50.000 store credit' },
+    { id:'R08', name:'Partner Discount',     emoji:'💚', cost:350,  desc:'10% off partner services' },
+    { id:'R09', name:'Carbon Certificate',   emoji:'📜', cost:800,  desc:'Official eco impact cert' },
+  ];
+
+  function getLevelInfo(pts) {
+    if (pts >= 5000) return { label:'Eco Legend',    next: null,  pct: 100 };
+    if (pts >= 2000) return { label:'Eco Champion',  next: 5000,  pct: Math.round((pts-2000)/30) };
+    if (pts >= 1000) return { label:'Eco Hero',      next: 2000,  pct: Math.round((pts-1000)/10) };
+    if (pts >= 500)  return { label:'Eco Explorer',  next: 1000,  pct: Math.round((pts-500)/5) };
+    return               { label:'Eco Starter',   next: 500,   pct: Math.round(pts/5) };
+  }
+
+  function renderProfile() {
+    const user = getUser();
+    if (!user) {
+      document.querySelector('.profile-hero').innerHTML =
+        `<div class="ph-inner" style="text-align:center;padding:40px 0;">
+          <p style="color:rgba(255,255,255,.7);margin-bottom:16px;">Please log in to view your profile.</p>
+          <button onclick="openLogin()" class="btn-dark">Log In</button>
+        </div>`;
+      return;
+    }
+
+    // Hero
+    document.getElementById('ph-avatar').textContent = user.avatar || '👤';
+    document.getElementById('ph-name').textContent   = user.name;
+    document.getElementById('ph-email').textContent  = user.email;
+    document.getElementById('ph-since').textContent  = 'Member since ' + (user.joinedDate || '2024');
+
+    const lvl = getLevelInfo(user.points || 0);
+    document.getElementById('ph-badge').textContent  = lvl.label;
+
+    // Stat cards
+    document.getElementById('sc-kg').textContent    = (user.totalKgRecycled || 0) + ' kg';
+    document.getElementById('sc-co2').textContent   = (user.totalCO2Saved || 0) + ' kg';
+    document.getElementById('sc-pts').textContent   = (user.points || 0).toLocaleString();
+    document.getElementById('sc-tx').textContent    = user.totalTransactions || 0;
+
+    // Points wallet
+    document.getElementById('pw-pts').textContent   = (user.points || 0).toLocaleString();
+    document.getElementById('levelLabel').textContent = lvl.label;
+    document.getElementById('levelNext').textContent  = lvl.next
+      ? `→ ${lvl.next} pts for next level`
+      : '🏆 Max level reached!';
+    setTimeout(() => {
+      document.getElementById('levelFill').style.width = Math.min(lvl.pct, 100) + '%';
+    }, 300);
+
+    // Eco impact
+    const co2 = user.totalCO2Saved   || 0;
+    const kg  = user.totalKgRecycled || 0;
+    document.getElementById('eco-co2').textContent = co2;
+    document.getElementById('eco-kg').textContent  = kg;
+    setTimeout(() => {
+      document.getElementById('eco-co2-bar').style.width = Math.min(co2/5, 100) + '%';
+      document.getElementById('eco-kg-bar').style.width  = Math.min(kg/2,  100) + '%';
+    }, 400);
+
+    // Recent history (last 3)
+    renderHistoryList(user.history || [], 'recentHistory', 3);
+    // Full history
+    renderHistoryList(user.history || [], 'fullHistory', 999);
+
+    // Rewards shop
+    document.getElementById('shop-pts-display').textContent = `You have ${(user.points||0).toLocaleString()} pts`;
+    renderRewards(user.points || 0);
+  }
+
+  function renderHistoryList(history, elId, max) {
+    const el = document.getElementById(elId);
+    if (!history.length) { el.innerHTML = '<p style="color:var(--text-light);font-size:.82rem;text-align:center;padding:20px;">No transactions yet.</p>'; return; }
+    el.innerHTML = history.slice(0, max).map(h => `
+      <div class="hist-item">
+        <div class="hist-ico ${h.type}">${h.type==='pickup'?'♻':h.type==='purchase'?'🛒':'🎁'}</div>
+        <div class="hist-body">
+          <div class="hist-label">${h.label}</div>
+          <div class="hist-meta">${h.type.charAt(0).toUpperCase()+h.type.slice(1)}${h.kg?' · '+h.kg+' kg':''}</div>
+        </div>
+        <div>
+          <div class="hist-pts ${h.points>0?'plus':'minus'}">${h.points>0?'+':''}${h.points} pts</div>
+          <div class="hist-date">${h.date}</div>
+        </div>
+      </div>`).join('');
+  }
+
+  function renderRewards(userPts) {
+    const grid = document.getElementById('rewardGrid');
+    grid.innerHTML = REWARDS.map(r => {
+      const canAfford = userPts >= r.cost;
+      return `
+        <div class="reward-card">
+          <div class="reward-ico">${r.emoji}</div>
+          <div class="reward-name">${r.name}</div>
+          <div class="reward-cost"><i class="fas fa-star"></i> ${r.cost} pts</div>
+          <button class="btn-redeem-item ${canAfford?'':'no-pts'}"
+                  onclick="${canAfford?`redeemItem('${r.id}','${r.name}',${r.cost},'${r.emoji}')`:'showToast(\'Not enough points.\')'}">
+            ${canAfford?'Redeem':'Need '+r.cost+' pts'}
+          </button>
+        </div>`;
+    }).join('');
+  }
+
+  function redeemItem(id, name, cost, emoji) {
+    const user = getUser();
+    if (!user || user.points < cost) { showToast('Not enough points.'); return; }
+
+    document.getElementById('redeemContent').innerHTML = `
+      <div style="text-align:center;padding:10px 0;">
+        <div style="font-size:3rem;margin-bottom:10px;">${emoji}</div>
+        <div style="font-weight:800;font-size:1.05rem;margin-bottom:5px;">Redeem ${name}?</div>
+        <div style="font-size:.8rem;color:var(--text-light);margin-bottom:20px;">This will deduct <strong>${cost} Green Points</strong> from your wallet.</div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="closeRedeem()" style="flex:1;padding:10px;border-radius:8px;border:1.5px solid var(--grey-border);background:white;cursor:pointer;font-family:Poppins,sans-serif;font-weight:600;">Cancel</button>
+          <button onclick="confirmRedeem('${id}','${name}',${cost},'${emoji}')" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--green-btn);color:white;cursor:pointer;font-family:Poppins,sans-serif;font-weight:700;">Confirm</button>
+        </div>
+      </div>`;
+    document.getElementById('redeemModal').classList.add('open');
+  }
+
+  function confirmRedeem(id, name, cost, emoji) {
+    const user = getUser();
+    if (!user) return;
+    user.points -= cost;
+    if (!user.history) user.history = [];
+    user.history.unshift({
+      id: 'RD'+Date.now(), type:'redeem',
+      label: name + ' (Redeemed)',
+      points: -cost,
+      date: new Date().toISOString().slice(0,10),
+      status:'completed'
+    });
+    localStorage.setItem('rs_auth_user', JSON.stringify(user));
+    closeRedeem();
+    renderProfile();
+    renderNav();
+    showToast(`${emoji} ${name} redeemed! Check your email for details.`);
+  }
+
+  function closeRedeem() {
+    document.getElementById('redeemModal').classList.remove('open');
+  }
+
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.getElementById('tab-'+name).classList.add('active');
+  }
+
+  // Init
+  document.addEventListener('DOMContentLoaded', () => {
+    renderProfile();
+  });
+  </script>
+</body>
+</html>

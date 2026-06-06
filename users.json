@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "name": "Dewi Santoso",
+    "email": "dewi@resaikel.id",
+    "password": "dewi123",
+    "role": "user",
+    "avatar": "🏠",
+    "points": 1240,
+    "totalKgRecycled": 84.5,
+    "totalCO2Saved": 211.2,
+    "totalTransactions": 18,
+    "joinedDate": "2024-02-10",
+    "history": [
+      { "id": "TX001", "type": "pickup", "label": "Residential Recycling", "kg": 12.5, "points": 125, "co2": 31.2, "date": "2025-05-10", "status": "completed" },
+      { "id": "TX002", "type": "purchase", "label": "rPET Pellets (2kg)", "points": -60, "date": "2025-05-08", "status": "completed" },
+      { "id": "TX003", "type": "pickup", "label": "Electronic Waste", "kg": 8.0, "points": 160, "co2": 20.0, "date": "2025-04-22", "status": "completed" },
+      { "id": "TX004", "type": "purchase", "label": "Eco Compost Mix", "points": -35, "date": "2025-04-15", "status": "completed" },
+      { "id": "TX005", "type": "pickup", "label": "Paper & Cardboard", "kg": 15.0, "points": 150, "co2": 37.5, "date": "2025-04-01", "status": "completed" }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Budi Harjono",
+    "email": "budi@resaikel.id",
+    "password": "budi123",
+    "role": "user",
+    "avatar": "🍽",
+    "points": 840,
+    "totalKgRecycled": 52.0,
+    "totalCO2Saved": 130.0,
+    "totalTransactions": 11,
+    "joinedDate": "2024-05-18",
+    "history": [
+      { "id": "TX010", "type": "pickup", "label": "Organic Waste", "kg": 20.0, "points": 200, "co2": 50.0, "date": "2025-05-12", "status": "completed" },
+      { "id": "TX011", "type": "purchase", "label": "Biogas Substrate", "points": -120, "date": "2025-05-01", "status": "completed" },
+      { "id": "TX012", "type": "pickup", "label": "Mixed Plastic", "kg": 10.0, "points": 100, "co2": 25.0, "date": "2025-04-10", "status": "completed" }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Rina Kusuma",
+    "email": "rina@resaikel.id",
+    "password": "rina123",
+    "role": "user",
+    "avatar": "♻",
+    "points": 3560,
+    "totalKgRecycled": 210.0,
+    "totalCO2Saved": 525.0,
+    "totalTransactions": 42,
+    "joinedDate": "2023-11-05",
+    "history": [
+      { "id": "TX020", "type": "pickup", "label": "Scrap Metal", "kg": 30.0, "points": 300, "co2": 75.0, "date": "2025-05-15", "status": "completed" },
+      { "id": "TX021", "type": "purchase", "label": "Textile Fiber Bundles", "points": -55, "date": "2025-05-10", "status": "completed" },
+      { "id": "TX022", "type": "pickup", "label": "Glass & Bottles", "kg": 18.5, "points": 185, "co2": 46.2, "date": "2025-04-28", "status": "completed" }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Admin RE-SAIKEL",
+    "email": "admin@resaikel.id",
+    "password": "admin123",
+    "role": "admin",
+    "avatar": "👤",
+    "points": 9999,
+    "totalKgRecycled": 0,
+    "totalCO2Saved": 0,
+    "totalTransactions": 0,
+    "joinedDate": "2023-01-01",
+    "history": []
+  }
+]

@@ -10,6 +10,7 @@
 </head>
 <body data-page="about">
 
+  <!-- ══ NAV ══ -->
   <nav>
     <a class="nav-brand" href="index.html"><span class="ico">♻</span> RE-SAIKEL</a>
     <div class="nav-center">
@@ -19,13 +20,78 @@
       <a href="about.html"        id="nl-about">About us</a>
     </div>
     <div class="nav-right">
-      <a href="#" class="login">Log In</a>
-      <a href="#" class="signin">Sign In</a>
+      <button class="nav-cart-btn" onclick="openCart()" title="View cart" aria-label="Cart">
+        <i class="fas fa-shopping-cart"></i>
+        <span class="cart-badge" id="cartBadge"></span>
+      </button>
+      <a href="#" class="login"  id="nav-login-btn"  onclick="openLogin();return false;">Log In</a>
+      <a href="#" class="signin" id="nav-signin-btn" onclick="openLogin();return false;">Sign In</a>
+      <div class="nav-user-chip" id="nav-user-chip" style="display:none;">
+        <a href="profile.html" style="text-decoration:none;display:flex;align-items:center;gap:7px;">
+          <div class="nav-user-avatar" id="nav-user-avatar">👤</div>
+          <span class="nav-user-name" id="nav-user-name">User</span>
+        </a>
+        <button class="nav-logout-btn" onclick="logout()">Logout</button>
+      </div>
     </div>
   </nav>
 
+  <!-- ══ LOGIN MODAL ══ -->
+  <div class="modal-overlay" id="loginModal" onclick="if(event.target===this)closeLogin()">
+    <div class="login-modal">
+      <div class="lm-header">
+        <div class="brand"><span>♻</span> RE-SAIKEL</div>
+        <button class="lm-close" onclick="closeLogin()">✕</button>
+      </div>
+      <div class="lm-body">
+        <div class="lm-title">Welcome back</div>
+        <div class="lm-sub">Sign in to access your cart and bookings.</div>
+        <form onsubmit="submitLogin(event)">
+          <div class="lm-field">
+            <label>Email address</label>
+            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+          </div>
+          <div class="lm-field">
+            <label>Password</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <div class="lm-error" id="loginError"></div>
+          <button type="submit" class="lm-submit">LOG IN</button>
+        </form>
+        <div class="lm-hint">
+          <strong>Test accounts:</strong><br>
+          dewi@resaikel.id / dewi123<br>
+          budi@resaikel.id / budi123<br>
+          admin@resaikel.id / admin123
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CART MODAL ══ -->
+  <div class="modal-overlay" id="cartModal" onclick="if(event.target===this)closeCart()">
+    <div class="cart-modal">
+      <div class="cm-header">
+        <div class="cm-title"><i class="fas fa-shopping-cart"></i> Your Cart</div>
+        <button class="cm-close" onclick="closeCart()">✕</button>
+      </div>
+      <div class="cm-body" id="cartItems"></div>
+      <div class="cm-footer">
+        <div class="cm-total-row">
+          <span class="cm-total-lbl">Total</span>
+          <span class="cm-total-val" id="cartTotal">Rp 0</span>
+        </div>
+        <div class="cm-actions">
+          <button class="cm-clear"    onclick="clearCart()">Clear Cart</button>
+          <button class="cm-checkout" onclick="checkoutCart()">Checkout →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <main class="page-shell">
 
+    <!-- Page Hero -->
     <div class="page-hero">
       <div class="page-hero-inner">
         <h1>About RE-SAIKEL</h1>
@@ -33,6 +99,7 @@
       </div>
     </div>
 
+    <!-- About Content -->
     <div style="background:var(--grey-bg);padding:28px 40px;">
       <div class="about-grid container">
 
@@ -62,7 +129,7 @@
             <div class="team-card">
               <div class="team-av">👩‍💼</div>
               <div class="team-name">Sari Wijaya</div>
-              <div class="team-role">CEO & Co-Founder</div>
+              <div class="team-role">CEO &amp; Co-Founder</div>
             </div>
             <div class="team-card">
               <div class="team-av">👨‍💻</div>
@@ -87,6 +154,7 @@
 
   </main>
 
+  <!-- ══ FOOTER ══ -->
   <footer>
     <div class="ft-inner">
       <div class="ft-brand">
