@@ -1,53 +1,82 @@
 /* ============================================================
-   RE-SAIKEL — script.js
-   Auth (login/logout), Cart, Navigation, Counters, Calendar,
-   Booking, Marketplace, Toast
-   Storage: localStorage  |  Users: users.json (fetch)
+   RE-SAIKEL — script.js  (final clean build)
+   Auth, Cart, Nav, Toast, Calendar, Booking, Counters
    ============================================================ */
-
 'use strict';
 
-/* ─────────────────────────────────────────
-   AUTH — keys & helpers
-───────────────────────────────────────── */
-const AUTH_KEY  = 'rs_auth_user';   // currently logged-in user object
-const CART_KEY  = 'rs_cart';        // array of cart item objects
+const AUTH_KEY = 'rs_auth_user';
+const CART_KEY = 'rs_cart';
 
-function getUser()  { try { return JSON.parse(localStorage.getItem(AUTH_KEY)); } catch { return null; } }
-function getCart()  { try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch { return []; } }
-function saveCart(c){ localStorage.setItem(CART_KEY, JSON.stringify(c)); }
+function getUser()   { try { return JSON.parse(localStorage.getItem(AUTH_KEY)); } catch { return null; } }
+function getCart()   { try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; } catch { return []; } }
+function saveCart(c) { localStorage.setItem(CART_KEY, JSON.stringify(c)); }
 
+/* ─── TOAST (top-center, typed) ─── */
+function showToast(type, msg) {
+  if (arguments.length === 1) { msg = type; type = 'info'; }
+  const t = document.getElementById('toast');
+  if (!t) return;
+  const icons = { success:'fa-check-circle', info:'fa-info-circle', warning:'fa-exclamation-triangle', error:'fa-times-circle' };
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `<i class="fas ${icons[type]||icons.info}"></i><span>${msg}</span>`;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3600);
+}
+
+/* ─── LOGOUT ─── */
 function logout() {
   localStorage.removeItem(AUTH_KEY);
-  // keep the cart so it isn't lost on accidental logout
   renderNav();
-  showToast('You have been logged out.');
+  showToast('success', 'You have been logged out.');
   setTimeout(() => { window.location.href = 'index.html'; }, 900);
 }
 
-/* ─────────────────────────────────────────
-   LOGIN MODAL
-───────────────────────────────────────── */
+/* ─── LOGIN MODAL ─── */
 function openLogin() {
-  document.getElementById('loginModal').classList.add('open');
-  document.getElementById('loginEmail').focus();
-  document.getElementById('loginError').textContent = '';
+  const m = document.getElementById('loginModal');
+  if (!m) return;
+  m.classList.add('open');
+  const ee = document.getElementById('loginEmailErr');
+  const pe = document.getElementById('loginPassErr');
+  const er = document.getElementById('loginError');
+  const btn = document.getElementById('loginSubmitBtn');
+  if (ee) ee.textContent = '';
+  if (pe) pe.textContent = '';
+  if (er) er.textContent = '';
+  if (btn) { btn.disabled = false; btn.innerHTML = 'LOG IN'; }
+  setTimeout(() => { const f = document.getElementById('loginEmail'); if (f) f.focus(); }, 50);
 }
 function closeLogin() {
-  document.getElementById('loginModal').classList.remove('open');
+  const m = document.getElementById('loginModal');
+  if (m) m.classList.remove('open');
 }
 
 async function submitLogin(e) {
   e && e.preventDefault();
-  const email    = document.getElementById('loginEmail').value.trim().toLowerCase();
-  const password = document.getElementById('loginPassword').value;
+  const emailEl  = document.getElementById('loginEmail');
+  const passEl   = document.getElementById('loginPassword');
   const errEl    = document.getElementById('loginError');
-  errEl.textContent = '';
+  const emailErr = document.getElementById('loginEmailErr');
+  const passErr  = document.getElementById('loginPassErr');
+  const btn      = document.getElementById('loginSubmitBtn');
+  if (!emailEl || !passEl) return;
 
-  if (!email || !password) {
-    errEl.textContent = 'Please enter your email and password.';
-    return;
-  }
+  errEl.textContent = '';
+  emailErr.textContent = '';
+  passErr.textContent = '';
+
+  const email    = emailEl.value.trim().toLowerCase();
+  const password = passEl.value;
+
+  let valid = true;
+  if (!email) { emailErr.textContent = 'Email address is required.'; valid = false; }
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { emailErr.textContent = 'Enter a valid email address.'; valid = false; }
+  if (!password) { passErr.textContent = 'Password is required.'; valid = false; }
+  if (!valid) return;
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:6px;"></i>Signing in…';
 
   try {
     const res   = await fetch('users.json');
@@ -55,57 +84,52 @@ async function submitLogin(e) {
     const user  = users.find(u => u.email.toLowerCase() === email && u.password === password);
 
     if (!user) {
-      errEl.textContent = 'Invalid email or password.';
+      btn.disabled = false;
+      btn.innerHTML = 'LOG IN';
+      errEl.textContent = 'Incorrect email or password. Please try again.';
+      emailEl.focus();
       return;
     }
 
-    // Strip password before storing
+    btn.innerHTML = '<i class="fas fa-check-circle" style="margin-right:6px;"></i>Logged in!';
     const { password: _pw, ...safe } = user;
     localStorage.setItem(AUTH_KEY, JSON.stringify(safe));
 
-    closeLogin();
-    renderNav();
-    showToast(`Welcome back, ${safe.name}! 👋`);
-
-    // If on booking/marketplace pages, refresh cart UI
-    renderCartBadge();
+    setTimeout(() => {
+      closeLogin();
+      renderNav();
+      renderCartBadge();
+      showToast('success', `Welcome back, ${safe.name}! 👋`);
+    }, 500);
 
   } catch (err) {
-    errEl.textContent = 'Could not load user data. Make sure users.json is served correctly.';
+    btn.disabled = false;
+    btn.innerHTML = 'LOG IN';
+    errEl.textContent = 'Could not connect. Please ensure the server is running.';
     console.error(err);
   }
 }
 
-/* ─────────────────────────────────────────
-   CART MODAL
-───────────────────────────────────────── */
+/* ─── CART ─── */
 function openCart() {
-  const user = getUser();
-  if (!user) {
-    openLogin();
-    showToast('Please log in to view your cart.');
-    return;
-  }
+  if (!getUser()) { openLogin(); showToast('info', 'Please log in to view your cart.'); return; }
   renderCartModal();
   document.getElementById('cartModal').classList.add('open');
 }
 function closeCart() {
-  document.getElementById('cartModal').classList.remove('open');
+  const m = document.getElementById('cartModal');
+  if (m) m.classList.remove('open');
 }
 
 function renderCartModal() {
   const cart    = getCart();
   const body    = document.getElementById('cartItems');
   const totalEl = document.getElementById('cartTotal');
+  if (!body) return;
 
-  if (cart.length === 0) {
-    body.innerHTML = `
-      <div class="cart-empty">
-        <div style="font-size:2.5rem;margin-bottom:10px;">🛒</div>
-        <p>Your cart is empty.</p>
-        <a href="marketplace.html" onclick="closeCart()" class="btn-dark" style="margin-top:12px;display:inline-flex;">Browse Marketplace</a>
-      </div>`;
-    totalEl.textContent = 'Rp 0';
+  if (!cart.length) {
+    body.innerHTML = `<div class="cart-empty"><div style="font-size:2.4rem;margin-bottom:10px">🛒</div><p>Your cart is empty.</p><a href="marketplace.html" onclick="closeCart()" class="btn-dark" style="margin-top:12px;display:inline-flex;font-size:.78rem;">Browse Marketplace</a></div>`;
+    if (totalEl) totalEl.textContent = 'Rp 0';
     return;
   }
 
@@ -117,223 +141,207 @@ function renderCartModal() {
         <div class="ci-price">${item.priceLabel}</div>
       </div>
       <div class="ci-qty">
-        <button onclick="changeQty(${idx}, -1)">−</button>
+        <button onclick="changeQty(${idx},-1)" aria-label="Decrease">−</button>
         <span>${item.qty}</span>
-        <button onclick="changeQty(${idx}, 1)">+</button>
+        <button onclick="changeQty(${idx},1)" aria-label="Increase">+</button>
       </div>
-      <button class="ci-remove" onclick="removeItem(${idx})" title="Remove">✕</button>
+      <button class="ci-remove" onclick="removeItem(${idx})" aria-label="Remove item">✕</button>
     </div>`).join('');
 
-  const total = cart.reduce((sum, i) => sum + i.priceNum * i.qty, 0);
-  totalEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
+  if (totalEl) totalEl.textContent = 'Rp ' + cart.reduce((s,i) => s + i.priceNum * i.qty, 0).toLocaleString('id-ID');
 }
 
 function changeQty(idx, delta) {
   const cart = getCart();
   cart[idx].qty = Math.max(1, cart[idx].qty + delta);
-  saveCart(cart);
-  renderCartModal();
-  renderCartBadge();
+  saveCart(cart); renderCartModal(); renderCartBadge();
 }
-
 function removeItem(idx) {
-  const cart = getCart();
-  cart.splice(idx, 1);
-  saveCart(cart);
-  renderCartModal();
-  renderCartBadge();
-  showToast('Item removed from cart.');
+  const cart = getCart(); cart.splice(idx, 1);
+  saveCart(cart); renderCartModal(); renderCartBadge();
+  showToast('info', 'Item removed from cart.');
 }
-
 function clearCart() {
-  saveCart([]);
-  renderCartModal();
-  renderCartBadge();
-  showToast('Cart cleared.');
+  saveCart([]); renderCartModal(); renderCartBadge();
+  showToast('info', 'Cart cleared.');
 }
 
 function checkoutCart() {
   const cart = getCart();
-  if (cart.length === 0) { showToast('Your cart is empty.'); return; }
-
-  // Award points: 1 pt per Rp 1000 spent (rounded), min 10 pts
+  if (!cart.length) { showToast('warning', 'Your cart is empty.'); return; }
   const user = getUser();
   if (user) {
-    const totalSpent = cart.reduce((s, i) => s + i.priceNum * i.qty, 0);
-    const ptsEarned  = Math.max(10, Math.round(totalSpent / 1000));
-    user.points = (user.points || 0) + ptsEarned;
+    const total     = cart.reduce((s,i) => s + i.priceNum * i.qty, 0);
+    const pts       = Math.max(10, Math.round(total / 1000));
+    user.points     = (user.points || 0) + pts;
     user.totalTransactions = (user.totalTransactions || 0) + 1;
     if (!user.history) user.history = [];
-    const itemNames = cart.map(i => i.name).join(', ');
     user.history.unshift({
-      id: 'PU'+Date.now(), type:'purchase',
-      label: cart.length === 1 ? cart[0].name : `${cart.length} items (${itemNames.slice(0,30)}…)`,
-      points: ptsEarned,
+      id:'PU'+Date.now(), type:'purchase',
+      label: cart.length===1 ? cart[0].name : `${cart.length} items`,
+      points: pts,
       date: new Date().toISOString().slice(0,10),
       status:'completed'
     });
-    localStorage.setItem('rs_auth_user', JSON.stringify(user));
+    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
     renderNav();
-    saveCart([]);
-    renderCartModal();
-    renderCartBadge();
-    closeCart();
-    showToast(`✓ Order placed! You earned +${ptsEarned} Green Points! 🌿`);
+    saveCart([]); renderCartModal(); renderCartBadge(); closeCart();
+    showToast('success', `✓ Order placed! You earned +${pts} Green Points! 🌿`);
   } else {
-    saveCart([]);
-    renderCartModal();
-    renderCartBadge();
-    closeCart();
-    showToast('✓ Order placed! Thank you for recycling with RE-SAIKEL.');
+    saveCart([]); renderCartModal(); renderCartBadge(); closeCart();
+    showToast('success', '✓ Order placed! Thank you for recycling with RE-SAIKEL.');
   }
 }
 
-/* ─────────────────────────────────────────
-   ADD TO CART (called from marketplace)
-───────────────────────────────────────── */
 function addCart(name, emoji, priceLabel, priceNum) {
-  const user = getUser();
-  if (!user) {
-    openLogin();
-    showToast('Please log in to add items to your cart.');
-    return;
-  }
-
+  if (!getUser()) { openLogin(); showToast('info', 'Please log in to add items to your cart.'); return; }
   const cart  = getCart();
   const found = cart.find(i => i.name === name);
-  if (found) {
-    found.qty += 1;
-  } else {
-    cart.push({ name, emoji, priceLabel, priceNum, qty: 1 });
-  }
-  saveCart(cart);
-  renderCartBadge();
-  showToast(`${name} added to cart!`);
+  if (found) found.qty += 1; else cart.push({ name, emoji, priceLabel, priceNum, qty:1 });
+  saveCart(cart); renderCartBadge();
+  showToast('success', `${name} added to cart!`);
 }
 
-/* ─────────────────────────────────────────
-   CART BADGE (count bubble on nav icon)
-───────────────────────────────────────── */
 function renderCartBadge() {
   const badge = document.getElementById('cartBadge');
   if (!badge) return;
-  const user  = getUser();
-  if (!user)  { badge.style.display = 'none'; return; }
-  const total = getCart().reduce((s, i) => s + i.qty, 0);
-  if (total > 0) {
-    badge.textContent = total > 99 ? '99+' : total;
-    badge.style.display = 'flex';
-  } else {
-    badge.style.display = 'none';
-  }
+  if (!getUser()) { badge.style.display = 'none'; return; }
+  const total = getCart().reduce((s,i) => s + i.qty, 0);
+  badge.textContent = total > 99 ? '99+' : total;
+  badge.style.display = total > 0 ? 'flex' : 'none';
 }
 
-/* ─────────────────────────────────────────
-   NAV RENDER — shows auth state
-───────────────────────────────────────── */
+/* ─── NAV RENDER ─── */
 function renderNav() {
-  const user       = getUser();
-  const loginBtn   = document.getElementById('nav-login-btn');
-  const signinBtn  = document.getElementById('nav-signin-btn');
-  const userChip   = document.getElementById('nav-user-chip');
-  const userName   = document.getElementById('nav-user-name');
-  const userAvatar = document.getElementById('nav-user-avatar');
-
-  if (!loginBtn) return; // nav not on this page
+  const user      = getUser();
+  const loginBtn  = document.getElementById('nav-login-btn');
+  const signupBtn = document.getElementById('nav-signin-btn');
+  const userChip  = document.getElementById('nav-user-chip');
+  if (!loginBtn) return;
 
   if (user) {
     loginBtn.style.display  = 'none';
-    signinBtn.style.display = 'none';
-    userChip.style.display  = 'flex';
-    if (userName)   userName.textContent  = user.name.split(' ')[0];
-    if (userAvatar) userAvatar.textContent = user.avatar || '👤';
+    if (signupBtn) signupBtn.style.display = 'none';
+    userChip.style.display = 'flex';
+    const n = document.getElementById('nav-user-name');
+    const a = document.getElementById('nav-user-avatar');
+    if (n) n.textContent = user.name.split(' ')[0];
+    if (a) a.textContent = user.avatar || '👤';
+
+    // Update mobile menu for logged-in state
+    const mobLogin    = document.getElementById('mob-login-action');
+    const mobUserInfo = document.getElementById('mob-user-info');
+    if (mobLogin)    mobLogin.style.display    = 'none';
+    if (mobUserInfo) mobUserInfo.style.display = 'flex';
+    const mobName   = document.getElementById('mob-user-name-text');
+    const mobAvatar = document.getElementById('mob-user-avatar-text');
+    if (mobName)   mobName.textContent   = user.name;
+    if (mobAvatar) mobAvatar.textContent = user.avatar || '👤';
   } else {
     loginBtn.style.display  = '';
-    signinBtn.style.display = '';
-    userChip.style.display  = 'none';
+    if (signupBtn) signupBtn.style.display = '';
+    userChip.style.display = 'none';
+    const mobLogin    = document.getElementById('mob-login-action');
+    const mobUserInfo = document.getElementById('mob-user-info');
+    if (mobLogin)    mobLogin.style.display    = 'flex';
+    if (mobUserInfo) mobUserInfo.style.display = 'none';
   }
-
   renderCartBadge();
 }
 
-/* ─────────────────────────────────────────
-   ACTIVE NAV LINK
-───────────────────────────────────────── */
-function setActiveNav() {
-  const page = document.body.dataset.page || 'home';
-  const map  = { home: 'nl-home', services: 'nl-services', how: 'nl-how', about: 'nl-about' };
-  const id   = map[page];
-  if (id) { const el = document.getElementById(id); if (el) el.classList.add('active'); }
+/* ─── HAMBURGER MENU ─── */
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobileMenu');
+  const btn  = document.getElementById('hamburgerBtn');
+  if (!menu) return;
+  const open = menu.classList.toggle('open');
+  if (btn) {
+    btn.setAttribute('aria-expanded', open);
+    btn.innerHTML = open ? '<i class="fas fa-times"></i>' : '<i class="fas fa-bars"></i>';
+  }
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+function closeMobileMenu() {
+  const menu = document.getElementById('mobileMenu');
+  const btn  = document.getElementById('hamburgerBtn');
+  if (!menu || !menu.classList.contains('open')) return;
+  menu.classList.remove('open');
+  if (btn) { btn.setAttribute('aria-expanded','false'); btn.innerHTML = '<i class="fas fa-bars"></i>'; }
+  document.body.style.overflow = '';
 }
 
-/* ─────────────────────────────────────────
-   SCROLL REVEAL
-───────────────────────────────────────── */
+/* ─── ACTIVE NAV ─── */
+function setActiveNav() {
+  const page = document.body.dataset.page || 'home';
+  const map  = { home:'nl-home', services:'nl-services', how:'nl-how', about:'nl-about' };
+  const id   = map[page];
+  if (id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+    const mob = document.getElementById('mob-' + id);
+    if (mob) mob.classList.add('active');
+  }
+}
+
+/* ─── SCROLL REVEAL ─── */
 function revealPage() {
-  document.querySelectorAll('.sr').forEach((el, i) => {
-    setTimeout(() => el.classList.add('vis'), i * 55);
-  });
+  document.querySelectorAll('.sr').forEach((el, i) => setTimeout(() => el.classList.add('vis'), i * 55));
 }
 window.addEventListener('scroll', () => {
   document.querySelectorAll('.sr:not(.vis)').forEach(el => {
     if (el.getBoundingClientRect().top < window.innerHeight - 50) el.classList.add('vis');
   });
-});
+}, { passive: true });
 
-/* ─────────────────────────────────────────
-   STAT COUNTERS
-───────────────────────────────────────── */
-let countersDone = false;
-function runCounters() {
-  if (countersDone) return; countersDone = true;
-  document.querySelectorAll('[data-target]').forEach(el => {
-    const target = +el.dataset.target, suf = el.dataset.suf || '';
-    let cur = 0; const inc = target / 55;
-    const t = setInterval(() => {
-      cur = Math.min(cur + inc, target);
-      el.textContent = Math.floor(cur).toLocaleString() + suf;
-      if (cur >= target) clearInterval(t);
-    }, 25);
-  });
-}
+/* ─── STAT COUNTERS ─── */
 function initCounters() {
   const banner = document.querySelector('.stats-banner');
   if (!banner) return;
+  // Pre-render final values immediately (no flash of 0)
+  document.querySelectorAll('[data-target]').forEach(el => {
+    el.textContent = (+el.dataset.target).toLocaleString() + (el.dataset.suf || '');
+  });
+  let animated = false;
   new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) runCounters(); });
-  }, { threshold: 0.4 }).observe(banner);
+    entries.forEach(e => {
+      if (!e.isIntersecting || animated) return;
+      animated = true;
+      document.querySelectorAll('[data-target]').forEach(el => {
+        const target = +el.dataset.target, suf = el.dataset.suf || '';
+        let cur = 0; const inc = target / 55;
+        const t = setInterval(() => {
+          cur = Math.min(cur + inc, target);
+          el.textContent = Math.floor(cur).toLocaleString() + suf;
+          if (cur >= target) clearInterval(t);
+        }, 25);
+      });
+    });
+  }, { threshold: 0.3 }).observe(banner);
 }
 
-/* ─────────────────────────────────────────
-   CALENDAR
-───────────────────────────────────────── */
-const DOW = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-
+/* ─── CALENDAR ─── */
+const DOW = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 function buildCal() {
   const cg = document.getElementById('calGrid');
   const tb = document.getElementById('timeBox');
   if (!cg || !tb) return;
 
   cg.innerHTML = '';
-  DOW.forEach(d => {
-    const el = document.createElement('div');
-    el.className = 'cal-dow'; el.textContent = d; cg.appendChild(el);
-  });
+  DOW.forEach(d => { const e = document.createElement('div'); e.className='cal-dow'; e.textContent=d; cg.appendChild(e); });
 
   const startDay = new Date(2025, 4, 1).getDay();
-  for (let i = 0; i < startDay; i++) {
-    const e = document.createElement('div'); e.className = 'cal-day empty'; cg.appendChild(e);
-  }
+  for (let i = 0; i < startDay; i++) { const e = document.createElement('div'); e.className='cal-day empty'; cg.appendChild(e); }
   for (let d = 1; d <= 31; d++) {
-    const el = document.createElement('div'); el.className = 'cal-day';
+    const el = document.createElement('div'); el.className='cal-day';
     if (d < 17) el.classList.add('past');
     if (d === 17) el.classList.add('today');
     el.textContent = d;
     if (d >= 17) {
       el.addEventListener('click', () => {
-        document.querySelectorAll('#calGrid .cal-day.sel').forEach(x => x.classList.remove('sel'));
+        cg.querySelectorAll('.cal-day.sel').forEach(x => x.classList.remove('sel'));
         el.classList.add('sel');
-        const s = document.getElementById('sum-date'); if (s) s.textContent = `May ${d}, 2025`;
+        updateSummary('sum-date', `May ${d}, 2025`);
+        updateSummary('mob-sum-date', `May ${d}, 2025`);
       });
     }
     cg.appendChild(el);
@@ -341,96 +349,100 @@ function buildCal() {
 
   tb.innerHTML = '';
   ['11:00','12:00','13:00','14:00','15:00','16:00'].forEach(t => {
-    const el = document.createElement('div'); el.className = 'time-slot'; el.textContent = t;
+    const el = document.createElement('div'); el.className='time-slot'; el.textContent=t;
     el.addEventListener('click', () => {
-      document.querySelectorAll('#timeBox .time-slot.sel').forEach(x => x.classList.remove('sel'));
+      tb.querySelectorAll('.time-slot.sel').forEach(x => x.classList.remove('sel'));
       el.classList.add('sel');
-      const s = document.getElementById('sum-time'); if (s) s.textContent = t;
+      updateSummary('sum-time', t);
+      updateSummary('mob-sum-time', t);
     });
     tb.appendChild(el);
   });
 }
 
-/* ─────────────────────────────────────────
-   BOOKING
-───────────────────────────────────────── */
+/* ─── BOOKING — live summary + edit jumps ─── */
+function updateSummary(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = val;
+  el.classList.remove('sum-updated');
+  void el.offsetWidth;
+  el.classList.add('sum-updated');
+}
+
+// Sync both desktop sidebar and mobile inline summary
+function syncSummaries(field, val) {
+  updateSummary('sum-' + field, val);
+  updateSummary('mob-sum-' + field, val);
+}
+
 function selWaste(el, name) {
   document.querySelectorAll('.wtype-card').forEach(c => c.classList.remove('sel'));
   el.classList.add('sel');
-  const s = document.getElementById('sum-waste'); if (s) s.textContent = name;
+  syncSummaries('waste', name);
 }
 function selPartner(el, name) {
   document.querySelectorAll('.partner-card').forEach(c => c.classList.remove('sel'));
   el.classList.add('sel');
-  const s = document.getElementById('sum-partner'); if (s) s.textContent = name;
+  syncSummaries('partner', name);
 }
 function useLocation() {
   const input = document.getElementById('loc-input');
-  const sumLoc = document.getElementById('sum-loc');
   if (input) input.value = 'Jl. Duren Sawit Baru, Jakarta Timur';
-  if (sumLoc) sumLoc.textContent = 'Duren Sawit, Jakarta';
-  showToast('Location set to Duren Sawit, Jakarta');
+  syncSummaries('loc', 'Duren Sawit, Jakarta');
+  showToast('success', 'Location set to Duren Sawit, Jakarta');
 }
 function initLocInput() {
   const input = document.getElementById('loc-input');
   if (!input) return;
-  input.addEventListener('input', () => {
-    const s = document.getElementById('sum-loc'); if (s) s.textContent = input.value || '–';
-  });
+  input.addEventListener('input', () => syncSummaries('loc', input.value || '–'));
 }
+
+function jumpToStep(stepId) {
+  const el = document.getElementById(stepId);
+  if (!el) return;
+  el.scrollIntoView({ behavior:'smooth', block:'start' });
+  el.classList.add('step-highlight');
+  setTimeout(() => el.classList.remove('step-highlight'), 1400);
+}
+
 function confirmBook() {
-  const user = getUser();
-  if (!user) { openLogin(); showToast('Please log in to confirm a booking.'); return; }
-  const d = document.getElementById('sum-date');
-  const p = document.getElementById('sum-partner');
-  const w = document.getElementById('sum-waste');
-  const t = document.getElementById('sum-time');
-  if (!d || d.textContent === '–') { showToast('Please select a pickup date first.'); return; }
-  // Save active booking to localStorage for tracking page
+  if (!getUser()) { openLogin(); showToast('warning', 'Please log in to confirm a booking.'); return; }
+  const dateEl = document.getElementById('sum-date') || document.getElementById('mob-sum-date');
+  const timeEl = document.getElementById('sum-time') || document.getElementById('mob-sum-time');
+  const d = dateEl?.textContent;
+  const t = timeEl?.textContent;
+
+  if (!d || d === '–') { showToast('warning', 'Please select a pickup date.'); jumpToStep('step3'); return; }
+  if (!t || t === '–') { showToast('warning', 'Please select a time slot.');   jumpToStep('step3'); return; }
+
   const booking = {
-    partner: p ? p.textContent : 'Joko Angkut',
-    waste:   w ? w.textContent : 'Residential Recycling',
-    time:    t ? t.textContent : '14:00',
-    date:    d ? d.textContent : '',
-    loc:     (document.getElementById('sum-loc') || {}).textContent || ''
+    partner: document.getElementById('sum-partner')?.textContent || 'Joko Angkut',
+    waste:   document.getElementById('sum-waste')?.textContent   || 'Residential Recycling',
+    time: t, date: d,
+    loc: document.getElementById('sum-loc')?.textContent || ''
   };
   localStorage.setItem('rs_active_booking', JSON.stringify(booking));
-  showToast('✓ Pickup confirmed! Redirecting to tracking…');
+  showToast('success', '✓ Booking confirmed! Redirecting to tracking…');
   setTimeout(() => { window.location.href = 'pickup-tracking.html'; }, 1200);
 }
-function saveBook() {
-  showToast('Draft saved. You can complete this anytime.');
-}
+function saveBook() { showToast('info', 'Draft saved. You can complete this anytime.'); }
 
-/* ─────────────────────────────────────────
-   TOAST
-───────────────────────────────────────── */
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  const txt = document.getElementById('toastTxt');
-  if (!t || !txt) return;
-  txt.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 3200);
-}
-
-/* ─────────────────────────────────────────
-   KEYBOARD & OUTSIDE CLICK — close modals
-───────────────────────────────────────── */
+/* ─── KEYBOARD + OUTSIDE CLICK ─── */
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeLogin(); closeCart(); }
+  if (e.key === 'Escape') { closeLogin(); closeCart(); closeMobileMenu(); }
 });
 document.addEventListener('click', e => {
-  const lm = document.getElementById('loginModal');
-  const cm = document.getElementById('cartModal');
+  const lm   = document.getElementById('loginModal');
+  const cm   = document.getElementById('cartModal');
+  const mob  = document.getElementById('mobileMenu');
+  const hbtn = document.getElementById('hamburgerBtn');
   if (lm && e.target === lm) closeLogin();
   if (cm && e.target === cm) closeCart();
+  if (mob && mob.classList.contains('open') && !mob.contains(e.target) && !hbtn?.contains(e.target)) closeMobileMenu();
 });
 
-/* ─────────────────────────────────────────
-   INIT
-───────────────────────────────────────── */
+/* ─── INIT ─── */
 document.addEventListener('DOMContentLoaded', () => {
   setActiveNav();
   renderNav();

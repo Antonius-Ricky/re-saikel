@@ -20,12 +20,12 @@
       <a href="about.html"        id="nl-about">About us</a>
     </div>
     <div class="nav-right">
-      <button class="nav-cart-btn" onclick="openCart()" title="View cart" aria-label="Cart">
+      <button class="nav-cart-btn" onclick="openCart()" title="View cart" aria-label="View cart">
         <i class="fas fa-shopping-cart"></i>
         <span class="cart-badge" id="cartBadge"></span>
       </button>
-      <a href="#" class="login"  id="nav-login-btn"  onclick="openLogin();return false;">Log In</a>
-      <a href="#" class="signin" id="nav-signin-btn" onclick="openLogin();return false;">Sign In</a>
+      <a href="#" class="login" id="nav-login-btn" onclick="openLogin();return false;">Log In</a>
+      <a href="#" class="signin" id="nav-signin-btn" onclick="openLogin();return false;">Sign Up</a>
       <div class="nav-user-chip" id="nav-user-chip" style="display:none;">
         <a href="profile.html" style="text-decoration:none;display:flex;align-items:center;gap:7px;">
           <div class="nav-user-avatar" id="nav-user-avatar">👤</div>
@@ -33,37 +33,50 @@
         </a>
         <button class="nav-logout-btn" onclick="logout()">Logout</button>
       </div>
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+      </button>
     </div>
   </nav>
+
+  <!-- ══ MOBILE MENU ══ -->
+  <div class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Mobile navigation">
+    <a href="index.html"        class="mob-nav-link" id="mob-nl-home">    <i class="fas fa-home"></i> Home</a>
+    <a href="services.html"     class="mob-nav-link" id="mob-nl-services"><i class="fas fa-recycle"></i> Recycling Services</a>
+    <a href="how-it-works.html" class="mob-nav-link" id="mob-nl-how">    <i class="fas fa-question-circle"></i> How It Works</a>
+    <a href="about.html"        class="mob-nav-link" id="mob-nl-about">  <i class="fas fa-info-circle"></i> About us</a>
+    <div class="mob-nav-divider"></div>
+    <a href="marketplace.html"  class="mob-nav-link"><i class="fas fa-store"></i> Marketplace</a>
+    <a href="booking.html"      class="mob-nav-link"><i class="fas fa-calendar-check"></i> Book Pickup</a>
+    <a href="profile.html"      class="mob-nav-link"><i class="fas fa-user"></i> My Profile</a>
+    <div class="mob-nav-divider"></div>
+    <button class="mob-nav-action primary" onclick="openLogin();closeMobileMenu()"><i class="fas fa-sign-in-alt"></i> Log In</button>
+  </div>
 
   <!-- ══ LOGIN MODAL ══ -->
   <div class="modal-overlay" id="loginModal" onclick="if(event.target===this)closeLogin()">
     <div class="login-modal">
       <div class="lm-header">
         <div class="brand"><span>♻</span> RE-SAIKEL</div>
-        <button class="lm-close" onclick="closeLogin()">✕</button>
+        <button class="lm-close" onclick="closeLogin()" aria-label="Close">✕</button>
       </div>
       <div class="lm-body">
         <div class="lm-title">Welcome back</div>
-        <div class="lm-sub">Sign in to access your cart and bookings.</div>
-        <form onsubmit="submitLogin(event)">
+        <div class="lm-sub">Log in to access your cart, bookings, and green points.</div>
+        <form onsubmit="submitLogin(event)" novalidate>
           <div class="lm-field">
-            <label>Email address</label>
-            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+            <label for="loginEmail">Email address</label>
+            <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email" aria-describedby="loginEmailErr">
+            <span class="field-err" id="loginEmailErr" role="alert"></span>
           </div>
           <div class="lm-field">
-            <label>Password</label>
-            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" aria-describedby="loginPassErr">
+            <span class="field-err" id="loginPassErr" role="alert"></span>
           </div>
-          <div class="lm-error" id="loginError"></div>
-          <button type="submit" class="lm-submit">LOG IN</button>
+          <div class="lm-error" id="loginError" role="alert"></div>
+          <button type="submit" class="lm-submit" id="loginSubmitBtn">LOG IN</button>
         </form>
-        <div class="lm-hint">
-          <strong>Test accounts:</strong><br>
-          dewi@resaikel.id / dewi123<br>
-          budi@resaikel.id / budi123<br>
-          admin@resaikel.id / admin123
-        </div>
       </div>
     </div>
   </div>
@@ -71,22 +84,14 @@
   <!-- ══ CART MODAL ══ -->
   <div class="modal-overlay" id="cartModal" onclick="if(event.target===this)closeCart()">
     <div class="cart-modal">
-      <div class="cm-header">
-        <div class="cm-title"><i class="fas fa-shopping-cart"></i> Your Cart</div>
-        <button class="cm-close" onclick="closeCart()">✕</button>
-      </div>
+      <div class="cm-header"><div class="cm-title"><i class="fas fa-shopping-cart"></i> Your Cart</div><button class="cm-close" onclick="closeCart()" aria-label="Close cart">✕</button></div>
       <div class="cm-body" id="cartItems"></div>
       <div class="cm-footer">
-        <div class="cm-total-row">
-          <span class="cm-total-lbl">Total</span>
-          <span class="cm-total-val" id="cartTotal">Rp 0</span>
-        </div>
-        <div class="cm-actions">
-          <button class="cm-clear"    onclick="clearCart()">Clear Cart</button>
-          <button class="cm-checkout" onclick="checkoutCart()">Checkout →</button>
-        </div>
+        <div class="cm-total-row"><span class="cm-total-lbl">Total</span><span class="cm-total-val" id="cartTotal">Rp 0</span></div>
+        <div class="cm-actions"><button class="cm-clear" onclick="clearCart()">Clear Cart</button><button class="cm-checkout" onclick="checkoutCart()">Checkout →</button></div>
       </div>
     </div>
+  </div>
   </div>
 
   <main class="page-shell">
@@ -132,7 +137,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">rPET Pellets (Clear)</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 8.500 / kg</span><span class="mkt-rating">★★★★★</span></div>
-                <button class="mkt-buy" onclick="addCart('rPET Pellets','🧴','Rp 8.500/kg',8500)">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('rPET Pellets','🧴','Rp 8.500/kg',8500)">Add to cart</button>
               </div>
             </div>
 
@@ -141,7 +146,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Recycled Cardboard Bales</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 2.200 / kg</span><span class="mkt-rating">★★★★☆</span></div>
-                <button class="mkt-buy" onclick="addCart('Cardboard Bales','📦','Rp 2.200/kg',2200)">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Cardboard Bales','📦','Rp 2.200/kg',2200)">Add to cart</button>
               </div>
             </div>
 
@@ -150,7 +155,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Scrap Aluminum (Clean)</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 18.000 / kg</span><span class="mkt-rating">★★★★★</span></div>
-                <button class="mkt-buy" onclick="addCart('Scrap Aluminum','🔩','Rp 18.000/kg',18000)">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Scrap Aluminum','🔩','Rp 18.000/kg',18000)">Add to cart</button>
               </div>
             </div>
 
@@ -159,7 +164,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Eco Compost Mix (5 kg)</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 35.000 / bag</span><span class="mkt-rating">★★★★☆</span></div>
-                <button class="mkt-buy" onclick="addCart('Compost Mix','🌿','Rp 35.000/bag',35000)">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Compost Mix','🌿','Rp 35.000/bag',35000)">Add to cart</button>
               </div>
             </div>
 
@@ -168,7 +173,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Crushed Glass Cullet</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 1.800 / kg</span><span class="mkt-rating">★★★★☆</span></div>
-                <button class="mkt-buy" onclick="addCart('Glass Cullet','🍶','Rp 1.800/kg',1800)">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Glass Cullet','🍶','Rp 1.800/kg',1800)">Add to cart</button>
               </div>
             </div>
 
@@ -177,7 +182,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Textile Fiber Bundles</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 5.500 / kg</span><span class="mkt-rating">★★★★★</span></div>
-                <button class="mkt-buy" onclick="addCart('Textile Fiber','👕','Rp 5.500/kg',5500)">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Textile Fiber','👕','Rp 5.500/kg',5500)">Add to cart</button>
               </div>
             </div>
 
@@ -186,7 +191,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">PCB Copper Recovery</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 45.000 / kg</span><span class="mkt-rating">★★★★☆</span></div>
-                <button class="mkt-buy" onclick="addCart('PCB Copper','💻','Rp 45.000/kg',45000)">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('PCB Copper','💻','Rp 45.000/kg',45000)">Add to cart</button>
               </div>
             </div>
 
@@ -195,7 +200,7 @@
               <div class="mkt-body">
                 <div class="mkt-title">Biogas Substrate Mix</div>
                 <div class="mkt-meta"><span class="mkt-price">Rp 12.000 / unit</span><span class="mkt-rating">★★★★★</span></div>
-                <button class="mkt-buy" onclick="addCart('Biogas Substrate','🔋','Rp 12.000/unit',12000)">Buy Now</button>
+                <button class="mkt-buy" onclick="addCart('Biogas Substrate','🔋','Rp 12.000/unit',12000)">Add to cart</button>
               </div>
             </div>
 
@@ -236,14 +241,14 @@
       </div>
       <div class="ft-col">
         <h4>Contact</h4>
-        <a href="#">hello@re-saikel.id</a>
-        <a href="#">+62 21 1234 5678</a>
-        <a href="#">Jakarta, Indonesia</a>
+        <a href="mailto:hello@re-saikel.id">hello@re-saikel.id</a>
+        <a href="tel:+622112345678">+62 21 1234 5678</a>
+        <span class="ft-nolink"><i class="fas fa-map-marker-alt" style="margin-right:4px;opacity:.5;"></i>Jakarta, Indonesia</span>
       </div>
     </div>
     <div class="ft-bottom">
       <span>© 2025 RE-SAIKEL. All rights reserved.</span>
-      <span>Privacy Policy · Terms of Service</span>
+      <span style="opacity:.5;">© RE-SAIKEL 2025 · All rights reserved.</span>
     </div>
   </footer>
 
